@@ -1,0 +1,439 @@
+/* ==========================================
+   1. VARIÁVEIS E CONFIGURAÇÕES GERAIS
+   ========================================== */
+:root {
+    --primary-blue: #227bdb;
+    --primary-dark: #004a99;
+    --success-green: #28a745;
+    --bg-light: #f4fdfc;
+    --white: #ffffff;
+    --text-dark: #1c1e21;
+    --text-gray: #65676b;
+    --border: #dddfe2;
+    --gold: #ffdf00;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    line-height: 1.5;
+}
+
+/* ==========================================
+   2. CABEÇALHO (NAV)
+   ========================================== */
+header {
+    background: #BDE3F2;
+    padding: 12px 0;
+    border-bottom: 2px solid #070c6b;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000; 
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.logo-text { 
+    font-size: 1.5rem; 
+    font-weight: bold; 
+    color: #070c6b; 
+    letter-spacing: -1px;
+}
+
+nav ul { list-style: none; display: flex; gap: 25px; }
+nav a { 
+    text-decoration: none; 
+    color: var(--text-dark); 
+    font-weight: 600; 
+    font-size: 0.9rem;
+    transition: 0.2s;
+}
+nav a:hover, nav a.active-link { text-decoration: 0.15rem underline var(--primary-blue); text-underline-offset: 3px; }
+
+/* ============================= 
+    2.1. MENSAGEM  
+================================ */
+   .saudacao{
+    background: linear-gradient(to right, #5ba9d97a, #5ba9d9);
+    color: var(--white);
+    padding: 48px 30px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding-left: 35px;
+    max-width: 1150px;
+    flex: 1;
+    border-radius: 25px;
+    margin: 30px auto 30px auto;
+    margin-bottom: 60px;
+}
+
+button.btn-perfil-home {
+    background: transparent;
+    color: white;
+    border: 0.11rem solid var(--bg-light);
+    padding: 11px 19px;
+    border-radius: 12px;
+    font-weight: 300 ;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 0.9rem;
+    margin-top: 25px;
+}
+button.btn-perfil-home:hover {
+    background: var(--bg-light);
+    color: var(--primary-blue);
+    border-color: var(--primary-blue);
+}
+.saudacao p{
+    margin-top: 5px;
+    font-weight: 400;
+}
+
+/* ==========================================
+   3. LAYOUT EM COLUNAS (HOME)
+   ========================================== */
+
+.main-content {
+    max-width: 1190px;
+    margin: 20px auto;
+    display: grid;
+    grid-template-columns: 1.8fr 1fr; /* Coluna maior na esquerda */
+    gap: 20px;
+    padding: 0 20px;
+}
+
+/* Layout para páginas de tela cheia (Loja/Ranking Geral) */
+.main-content-single {
+    max-width: 1100px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+.card {
+    background: var(--white);
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    padding: 20px; 
+}
+
+/* ==========================================
+   4. SLIDESHOW (TOPO ESQUERDA)
+   ========================================== */
+.slideshow-container {
+    position: relative;
+    height: 320px;
+    padding: 0 !important; /* Remove padding do card para a imagem sangrar */
+    overflow: hidden;
+    width: 100%;
+    margin: auto;
+    margin-bottom: 20px;
+}
+
+.mySlides { display: none; height: 100%; }
+.mySlides img { width: 100%; height: 100%; object-fit: cover; }
+
+.slide-caption {
+    position: absolute; bottom: 0; background: #dfedf8; width: 100%; padding: 15px; font-weight: bold;
+}
+
+.prev, .next {
+    cursor: pointer; position: absolute; top: 50%; padding: 16px;
+    color: white; font-weight: bold; transform: translateY(-50%);
+    text-decoration: none; border-radius: 0 3px 3px 0;
+}
+.next { right: 0; border-radius: 3px 0 0 3px; }
+.prev:hover, .next:hover { background: rgba(0,0,0,0.8); }
+
+/* ==========================================
+   5. SISTEMA DE ABAS E EVENTOS (ESTILO PRINT)
+   ========================================== */
+
+.aba-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    display: flex;
+    gap: 15px;
+}
+
+.num { color: #999; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: 0.3s; }
+.num.active { color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); }
+
+.tag-azul { background: var(--primary-blue); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+.tag-verde { background: var(--success-green); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+
+.content-box h2 { margin: 12px 0; font-size: 1.5rem; color: #111; }
+.desc { color: var(--text-gray); margin-bottom: 20px; min-height: 50px; }
+.info-footer { font-size: 0.85rem; color: #888; font-weight: 600; border-top: 1px solid #eee; padding-top: 10px; }
+
+/* ==========================================
+    5.1. ACORDEON
+   ========================================== */
+
+.acordeon{
+    width: 100%;
+    margin: auto;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+.acordeon-item {
+    border-bottom: 1px solid #ddd;
+}
+.acordeon-item input {
+    display: none;
+}
+.acordeon-item label {
+    display: block;
+    padding: 20px;
+    background: #5ba9d9;
+    color: var(--white);
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.3s;
+}
+.acordeon-item label:hover {
+    background: #4799cc;
+}
+.acordeon-item .content {
+    max-height: 0;
+    overflow: hidden;
+    background: var(--white);
+    padding: 0 15px;
+    transition: max-height 0.4s ease, padding 0.4s ease;
+}
+.acordeon-item input:checked ~ .content {
+    max-height: 300px; 
+    padding: 20px;
+}
+
+
+/* ==========================================
+   6. RANKINGS LATERAIS (DIREITA)
+   ========================================== */
+.ranking-title {
+    color: var(--text-dark);
+    background-color: #BDE3F2;
+    padding: 4px 10px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.tag-posicao { background:transparent; padding: 4px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; }
+h3{font-weight: 700;}
+
+.ranking-list { list-style: none; }
+.ranking-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f1f1;
+    font-size: 0.95rem;
+}
+
+.badge-coin {
+    background: #fff3cd;
+    color: #856404;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.8rem;
+    border: 1px solid #ffeeba;
+}
+
+.btn-ranking {
+    width: 100%;
+    margin-top: 15px;
+    background: var(--primary-blue);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+.btn-ranking:hover { background: var(--primary-dark); }
+
+.turma-card{
+    display: flex;
+    gap: calc(50% - 90px);
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+}
+
+
+/* ==========================================
+   7. LOJA (GRID DE PRODUTOS)
+   ========================================== */
+.produtos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.item-loja-card { text-align: center; transition: 0.3s; }
+.item-loja-card:hover { transform: translateY(-5px); }
+
+.item-loja-card img { width: 100%; border-radius: 8px; margin-bottom: 15px; }
+
+.preco-tag {
+    display: block;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--success-green);
+    margin: 10px 0;
+}
+
+.btn-loja-home{
+    padding: 10px;
+    border-radius: 8px;
+    background-color: var(--primary-blue);
+    color: white;
+    transition: 0.3s;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    width: 20%;
+}
+.btn-loja-home:hover { background: var(--primary-dark); }
+
+
+/* ==========================================
+   8. TABELAS (RANKING GERAL)
+   ========================================== */
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border); }
+th { background: #bde3f271; color: var(--primary-blue); border-radius: 6px; font-weight: bold; }
+tr:hover { background: #f9f9f9; }
+
+
+/* ==========================================
+   9. PERFIL E LOGIN
+   ========================================== */
+.login-mini { display: flex; flex-direction: column; gap: 10px; }
+.login-mini input { padding: 12px; border: 1px solid var(--border); border-radius: 6px; }
+.login-mini button { 
+    background: var(--success-green); 
+    color: white; border: none; 
+    padding: 12px; border-radius: 6px; 
+    font-weight: bold; cursor: pointer; 
+}
+
+.perfil-header{ width: 100%; background-image: linear-gradient(to right, #dfedf8, #bde2f5);}
+
+.perfil-header { display: flex; align-items: center; gap: 20px; padding: 25px; }
+.perfil-avatar { width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--primary-blue); }
+
+/* ---------------------------
+    9.1. CONQUISTAS
+-------------------------------*/
+
+.conquistas-grid{
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    margin: 30px auto;
+    gap: 65px;
+}
+.conquista-item{
+    text-align: center;
+    padding: 12px 18px 16px 18px;
+    background-color: #a5d8ec;
+    border-radius: 15%;
+    width: 160px;
+    box-shadow: 0 3px 4px rgba(32, 43, 43, 0.342);
+}
+.conquista-item h4{margin-top:5px; font-weight: 700; font-size: 1.1rem;}
+.badge-icon{font-size: 40px;}
+.conquista-item p{
+    line-height: 15px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1c1e21d0;
+}
+.bloqueada{opacity: 0;}
+
+.btn-full-width{
+    padding: 10px;
+    border-radius: 6px;
+    color: var(--text-dark);
+    font-size: 15px;
+    background: var(--white);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    border: none;
+    font-weight: 600;
+    width: 150px;
+}
+.btn-full-width:hover{
+    background-color: rgb(255, 195, 195);
+}
+
+
+/* ==========================================
+   10. RESPONSIVIDADE
+   ========================================== */
+@media (max-width: 850px) {
+    .main-content { grid-template-columns: 1fr; }
+    .col-direita { order: -1; } /* Ranking sobe no mobile */
+    .slideshow-container { height: 200px; }
+}
+
+
+/* ==========================================
+   11. CADASTRO E LOGIN
+   ========================================== */
+
+.acesso{
+    position: absolute;
+    left: 12vw;
+    top: 14vh;
+}
+.acesso h1{
+    color: #070c6b;
+    text-align: center;
+}
+.area-cadastro{
+    padding: 30px;
+    justify-content: center;
+    background-color: #3492d6b4;
+    text-align: center;
+    border: none;
+    border-radius: 22px;
+    width: 380px;
+    margin-top: 15px;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+}
+input, .btn-entrar{
+    background-color: var(--white);
+    color: var(--text-gray);
+    padding: 12px; 
+    border: none;
+    border-radius: 22px;
+    width: 100%;
+}
+input[type="submit"]{color: var(--white); text-align: center; 
+                    background-color: var(--primary-blue);}
+li{
+    list-style: none;
+    margin-top: 10px;
+}

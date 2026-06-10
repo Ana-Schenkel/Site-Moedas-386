@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil - EcoCoin</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <div class="logo-text">386 <span style="color: #0056b3;">EcoCoin</span></div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">INÍCIO</a></li>
+                    <li><a href="loja.html">LOJA</a></li>
+                    <li><a href="ranking.html">RANKING</a></li>
+                    <li><a href="perfil.html" class="active-link">PERFIL</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content-single" style="width: 1000px;">      
+        <div class="card perfil-header">
+            <div class="perfil-avatar">
+                <img src="Imagens/usuario1.png" alt="Foto do Aluno" style="width: 100%; border-radius: 50%;">
+            </div>
+            <div class="perfil-info">
+                <h1 id="nomeAluno">Carregando...</h1>
+                <p>Turma: <strong id="turmaAluno">---</strong></p>
+                <span class="saldo-destaque" id="saldoAluno">🪙 0.00 EcoCoins</span>
+            </div>
+        </div>
+
+        <section class="conquistas-perfil">
+            <div class="conquistas" style="padding: 20px;">
+                <span class="card-title" style="font-size: 21px; font-weight: 600;"> Minhas Conquistas</span>
+                <div class="conquistas-grid">
+                    <div class="conquista-item";>
+                        <div class="badge-icon">🚀</div>
+                        <h4>Pioneiro</h4>
+                        <p>Primeiro acesso ao portal</p>
+                    </div>
+                    <div class="conquista-item bloqueada">
+                        <div class="badge-icon">🌿</div>
+                        <h4>Eco-Herói</h4>
+                        <p>Doe 5kg de recicláveis</p>
+                    </div>
+                    <div class="conquista-item bloqueada">
+                        <div class="badge-icon">🛍️</div>
+                        <h4>Consumidor</h4>
+                        <p>Faça sua primeira compra</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="informacoes-perfil" style="width: 100%;">
+            <div class="card historico">
+                <span class="card-title" style="font-size: 21px; font-weight: 600;">Últimas Atividades</span>
+                <table class="tabela-historico">
+                    <thead>
+                        <tr>
+                            <th>Ação</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Sincronização com Planilha</td>
+                            <td class="valor-positivo">OK</td>
+                        </tr>
+                        <tr>
+                            <td>Bônus de Cadastro</td>
+                            <td class="valor-positivo">+10.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <button class="btn-full-width btn-danger" onclick="logout()"> ❌ Sair da Conta</button>
+
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        // Lógica específica para carregar os dados do aluno logado
+        window.onload = () => {
+            const alunoLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
+
+            if (!alunoLogado) {
+                // Se não houver ninguém logado, volta para a home
+                alert("Por favor, faça login primeiro!");
+                window.location.href = 'login.html';
+            } else {
+                // Preenche o HTML com os dados da Planilha/localStorage
+                document.getElementById('nomeAluno').innerText = alunoLogado.nome;
+                document.getElementById('turmaAluno').innerText = alunoLogado.turma;
+                document.getElementById('saldoAluno').innerText = `🪙 ${alunoLogado.saldo.toFixed(2)} EcoCoins`;
+            }
+        };
+
+        function logout() {
+            localStorage.removeItem('usuarioLogado');
+            window.location.href = 'index.html';
+        }
+    </script> 
+</body>
+</html>
+
+
+<!-- foto de perfil estudante https://via.placeholder.com/150/0056b3/ffffff?text=ESTUDANTE -->

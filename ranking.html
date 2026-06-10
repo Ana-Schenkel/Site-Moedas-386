@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking Geral - EcoCoin CIEP 386</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <div class="logo-text">386 <span style="color: #0056b3;">EcoCoin</span></div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">INÍCIO</a></li>
+                    <li><a href="loja.html">LOJA</a></li>
+                    <li><a href="ranking.html" class="active-link">RANKING</a></li>
+                    <li><a href="perfil.html">PERFIL</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content-single">
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <span class="tag-azul">Classificação</span>
+                    <h2 style="margin-top: 10px;">Ranking Geral de Alunos</h2>
+                    <p class="desc">Acompanhe o desempenho de todos os alunos do CIEP 386.</p>
+                </div>
+                
+                <div class="login-mini" style="flex-direction: row; align-items: center;">
+                    <input type="text" id="buscaNome" placeholder="🔍 Buscar aluno..." onkeyup="renderizarTabelaCompleta()" style="width: 250px;">
+                </div>
+            </div>
+        </div>        
+
+                
+        <div class="card" style="padding: 0; overflow: hidden;">
+                    <table id="tabelaRankingGeral">
+                        <thead>
+                            <tr>
+                                <th>Posição</th>
+                                <th>Nome do Aluno</th>
+                                <th>Turma</th>
+                                <th>EcoCoins 🪙</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaRanking">
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 40px; color: #999;">
+                                Sincronizando com a planilha do Google...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+
+        <div class="card">
+            <span class="ranking-title">Resumo por Turma</span>
+            <div class="turmas-ranking-grid" style="margin: 10px auto 10px auto;">
+                <div class="turma-card gold-border">
+                    <span class="tag-azul" style="background: #ffc107; color: #000;">1º Lugar</span>
+                    <h3>3001</h3>
+                    <p class="valor-eco">15.2 kg</p>
+                </div>
+                <div class="turma-card silver-border">
+                    <span class="tag-azul" style="background: #c0c0c0; color: #000;">2º Lugar</span>
+                    <h3>2002</h3>
+                    <p class="valor-eco">12.8 kg</p>
+                </div>
+                <div class="turma-card bronze-border">
+                    <span class="tag-azul" style="background: #cd7f32; color: #000;">3º Lugar</span>
+                    <h3>1001</h3>
+                    <p class="valor-eco">9.5 kg</p>
+                </div>
+                <div class="turma-card red-border">
+                    <span class="tag-azul" style="background: #fa735b; color: #000;">4º Lugar</span>
+                    <h3>3005</h3>
+                    <p class="valor-eco">7.9 kg</p>
+                </div>
+                <div class="turma-card red-border">
+                    <span class="tag-azul" style="background: #fa735b; color: #000;">5º Lugar</span>
+                    <h3>1006</h3>
+                    <p class="valor-eco">6.8 kg</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer style="text-align: center; padding: 30px; color: #888; font-size: 0.8rem;">
+        &copy; 2026 CIEP 386 - Projeto Sustentabilidade Escolar. Dados atualizados via Google Sheets.
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

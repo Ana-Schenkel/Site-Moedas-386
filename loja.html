@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loja EcoCoin - CIEP 386</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <div class="logo-text">386 <span style="color: #0056b3;">EcoCoin</span></div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">INÍCIO</a></li>
+                    <li><a href="loja.html" class="active-link">LOJA</a></li>
+                    <li><a href="ranking.html">RANKING</a></li>
+                    <li><a href="perfil.html">PERFIL</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content-single">
+        
+        <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+            <div>
+                <span class="tag-azul" style="background: #BDE3F2; color: var(--text-dark);">Loja de vouchers acadêmicos</span>
+                <h2 id="saldoExibido" style="margin-top: 10px;">🪙 Carregando saldo...</h2>
+                <p class="desc">Troque suas moedas por recompensas.</p>
+            </div>
+            <div class="login-mini" style="flex-direction: row; align-items: center;">
+                <select id="filtroLoja" onchange="filtrarLoja()" style="padding: 10px; border-radius: 6px; border: 1px solid #ddd;">
+                    <option value="todos">Todos os itens</option>
+                    <option value="material">Material Escolar</option>
+                    <option value="lanche">Lanches</option>
+                    <option value="lazer">Lazer / Vales</option>
+                </select>
+            </div>
+        </div>
+
+        <section class="produtos-grid">
+            
+            <div class="card item-loja-card" data-categoria="material">
+                <img src="https://via.placeholder.com/200x150/f8f9fa/0056b3?text=Caderno+Eco" alt="Caderno">
+                <span class="tag-verde">Material</span>
+                <h3>Caderno Personalizado</h3>
+                <span class="preco-tag">30.00 🪙</span>
+                <button class="btn-ranking" onclick="resgatarItem('Caderno')">Resgatar</button>
+            </div>
+
+            <div class="card item-loja-card" data-categoria="lazer">
+                <img src="https://via.placeholder.com/200x150/f8f9fa/0056b3?text=Vale+Cinema" alt="Cinema">
+                <span class="tag-azul">Lazer</span>
+                <h3>Vale-Cinema</h3>
+                <span class="preco-tag">50.00 🪙</span>
+                <button class="btn-ranking" onclick="resgatarItem('Vale Cinema')">Resgatar</button>
+            </div>
+
+            <div class="card item-loja-card" data-categoria="lanche">
+                <img src="https://via.placeholder.com/200x150/f8f9fa/0056b3?text=Pipoca" alt="Pipoca">
+                <span class="tag-verde" style="background: #fd7e14;">Lanches</span>
+                <h3>Combo Pipoca</h3>
+                <span class="preco-tag">20.00 🪙</span>
+                <button class="btn-ranking" onclick="resgatarItem('Combo Pipoca')">Resgatar</button>
+            </div>
+
+            <div class="card item-loja-card" data-categoria="material">
+                <img src="https://via.placeholder.com/200x150/f8f9fa/0056b3?text=Kit+Canetas" alt="Canetas">
+                <span class="tag-verde">Material</span>
+                <h3>Kit Canetas Coloridas</h3>
+                <span class="preco-tag">15.00 🪙</span>
+                <button class="btn-ranking" onclick="resgatarItem('Kit Canetas')">Resgatar</button>
+            </div>
+
+        </section>
+    </main>
+
+    <footer style="text-align: center; padding: 30px; color: #888; font-size: 0.8rem;">
+        &copy; 2026 CIEP 386 - Os itens devem ser retirados na secretaria após o resgate digital.
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Pequena lógica extra para a página da loja
+        window.addEventListener('DOMContentLoaded', () => {
+            const aluno = JSON.parse(localStorage.getItem('usuarioLogado'));
+            if (aluno) {
+                document.getElementById('saldoExibido').innerText = `🪙 ${aluno.saldo.toFixed(2)} EcoCoins`;
+            } else {
+                document.getElementById('saldoExibido').innerText = `🪙 Faça login para ver seu saldo`;
+            }
+        });
+
+        function resgatarItem(nomeItem) {
+            const aluno = JSON.parse(localStorage.getItem('usuarioLogado'));
+            if (!aluno) {
+                alert("Você precisa estar logado para resgatar itens!");
+                return;
+            }
+            alert(`Solicitação de resgate enviada: ${nomeItem}.\nProcure a coordenação para retirar seu prêmio!`);
+        }
+
+        function filtrarLoja() {
+            const filtro = document.getElementById('filtroLoja').value;
+            const itens = document.querySelectorAll('.item-loja-card');
+            
+            itens.forEach(item => {
+                if (filtro === 'todos' || item.getAttribute('data-categoria') === filtro) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
