@@ -21,31 +21,32 @@
     <div class="logo-text" style="margin:12px 30px;">386 <span style="color: #0056b3;">EcoCoin</span></div>
     
     <div class="acesso">
-        <h1>Acesse sua conta</h1>
+        <h1 id="titulo">Acesse sua conta</h1>
         
         <section class="area-cadastro">
-            <div class="redes" style="border-bottom: 1px solid rgb(255, 255, 255); padding-bottom: 20px; ">
-                <ul>
-                    <li><button id="btn_inicio" class="btn-entrar" style="background-color: white; margin-top: -10px;">Voltar à página inicial</button></li> <!-- colocar como opção login por meio do google -->
-                    <li><button id="btn_conta" class="btn-entrar" style="background-color: var(--primary-dark); color: white;">Não tenho conta</button></li> <!-- colocar como opção login por meio do facebook -->
-                </ul>
-            </div>
-            <div id="login" class="cadastrar" style="margin-top: 20px;">
+            <div id="login" class="cadastrar" style="margin-top: 20px; border-bottom: 1px solid rgb(255, 255, 255); padding-bottom: 20px; ">
                 <ul>
                     <li><input type="email" id="email_login" placeholder="E-mail" required></li>
                     <li><input type="password" id="senha_login" placeholder="Senha" required></li>
-                    <li><input id="btn_entrar" type="submit" class="btn-entrar"value="Entrar"></li>
-                    <li><input id="esqueci_senha" type="submit" class="btn-entrar" value="Esqueceu a senha?"></li>
+                    <li><input type="submit" id="btn_entrar" class="btn-entrar"value="Entrar"></li>
+                    <li><input type="submit" id="esqueci_senha" class="btn-entrar" value="Esqueceu a senha?"></li>
                 </ul>
             </div>
-            <div id="nova_conta" class="cadastrar" style="margin-top: 20px;">
+            <div id="nova_conta" class="cadastrar" style="margin-top: 20px; border-bottom: 1px solid rgb(255, 255, 255); padding-bottom: 20px; ">
                 <ul>
-                    <li><input type="nome" id="nome_cadastro" placeholder="Nome" required></li>
-                    <li><input type="turma" id="turma_cadastro" placeholder="Turma" required></li>
-                    <li><input type="matricula" id="matricula_cadastro" placeholder="Matrícula" required></li>
+                    <li><input type="text" id="nome_cadastro" placeholder="Nome Completo" required></li>
+                    <li><input type="text" id="turma_cadastro" placeholder="Turma" required></li>
+                    <li><input type="number" id="matricula_cadastro" placeholder="Matrícula" required></li>
                     <li><input type="email" id="email_cadastro" placeholder="E-mail" required></li>
                     <li><input type="password" id="senha_cadastro" placeholder="Senha" required></li>
-                    <li><input id="btn_cadastrar" type="submit" class="btn-entrar"value="Cadastrar"></li>
+                    <li><input type="password" id="confsenha" placeholder="Confirmar Senha" required></li>
+                    <li><input type="submit" id="btn_cadastrar" class="btn-entrar" value="Cadastrar"></li>
+                </ul>
+            </div>
+            <div class="redes" style="border-top: 1px solid rgb(255, 255, 255); padding-top: 20px; ">
+                <ul>
+                    <li><button id="btn_inicio" class="btn-entrar" style="background-color: white; margin-top: 10px;">Voltar à página inicial</button></li> <!-- colocar como opção login por meio do google -->
+                    <li><button id="btn_conta" class="btn-entrar" style="background-color: var(--primary-dark); color: white;">Não tenho conta</button></li> <!-- colocar como opção login por meio do facebook -->
                 </ul>
             </div>
         </section>

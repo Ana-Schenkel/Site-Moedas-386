@@ -149,32 +149,6 @@ function renderizarTabelaCompleta() {
 }
 
 // ==========================================
-// 7. LOGIN E PERFIL
-// ==========================================
-// function fazerLogin() {
-//     const matricula = document.getElementById('inputMatricula').value;
-//     const aluno = dadosAlunos.find(a => a.matricula.toString() === matricula);
-
-//     if (aluno) {
-//         localStorage.setItem('usuarioLogado', JSON.stringify(aluno));
-//         window.location.href = 'perfil.html';
-//     } else {
-//         alert("Matrícula não encontrada! Verifique os dados com a secretaria.");
-//     }
-// }
-
-// function preencherDadosPerfil() {
-//     const aluno = JSON.parse(localStorage.getItem('usuarioLogado'));
-//     if (!aluno) {
-//         window.location.href = 'index.html';
-//         return;
-//     }
-//     document.getElementById('nomeAluno').innerText = aluno.nome;
-//     document.getElementById('turmaAluno').innerText = aluno.turma;
-//     document.getElementById('saldoAluno').innerText = `🪙 ${aluno.saldo.toFixed(2)} EcoCoins`;
-// }
-
-// ==========================================
 // DISPARO NO CARREGAMENTO
 // ==========================================
 window.onload = inicializarSite;
