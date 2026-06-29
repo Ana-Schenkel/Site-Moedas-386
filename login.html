@@ -14,8 +14,9 @@
             height: 100vh;
         }
     </style>
+    <script src="script_login_perfil.js"></script>
 </head>
-<body>
+<body id="pagina_login">
 
     <div class="logo-text" style="margin:12px 30px;">386 <span style="color: #0056b3;">EcoCoin</span></div>
     
@@ -25,20 +26,30 @@
         <section class="area-cadastro">
             <div class="redes" style="border-bottom: 1px solid rgb(255, 255, 255); padding-bottom: 20px; ">
                 <ul>
-                    <li><button class="btn-entrar" style="background-color: white; margin-top: -10px;">Entrar com Google</button></li> <!-- colocar como opção login por meio do google -->
-                    <li><button class="btn-entrar" style="background-color: var(--primary-dark); color: white;">Entrar com Facebook</button></li> <!-- colocar como opção login por meio do facebook -->
+                    <li><button id="btn_inicio" class="btn-entrar" style="background-color: white; margin-top: -10px;">Voltar à página inicial</button></li> <!-- colocar como opção login por meio do google -->
+                    <li><button id="btn_conta" class="btn-entrar" style="background-color: var(--primary-dark); color: white;">Não tenho conta</button></li> <!-- colocar como opção login por meio do facebook -->
                 </ul>
             </div>
-            <div class="cadastrar" style="margin-top: 20px;">
+            <div id="login" class="cadastrar" style="margin-top: 20px;">
                 <ul>
-                    <li><input type="email" id="email" placeholder="E-mail" required></li>
-                    <li><input type="password" id="senha" placeholder="Senha" required></li>
-                    <li><input type="submit" value="Entrar"></li>
-                    <li><input type="submit" value="Esqueceu a senha?" style="background-color: #0360c4ad;"></li>
+                    <li><input type="email" id="email_login" placeholder="E-mail" required></li>
+                    <li><input type="password" id="senha_login" placeholder="Senha" required></li>
+                    <li><input id="btn_entrar" type="submit" class="btn-entrar"value="Entrar"></li>
+                    <li><input id="esqueci_senha" type="submit" class="btn-entrar" value="Esqueceu a senha?"></li>
+                </ul>
+            </div>
+            <div id="nova_conta" class="cadastrar" style="margin-top: 20px;">
+                <ul>
+                    <li><input type="nome" id="nome_cadastro" placeholder="Nome" required></li>
+                    <li><input type="turma" id="turma_cadastro" placeholder="Turma" required></li>
+                    <li><input type="matricula" id="matricula_cadastro" placeholder="Matrícula" required></li>
+                    <li><input type="email" id="email_cadastro" placeholder="E-mail" required></li>
+                    <li><input type="password" id="senha_cadastro" placeholder="Senha" required></li>
+                    <li><input id="btn_cadastrar" type="submit" class="btn-entrar"value="Cadastrar"></li>
                 </ul>
             </div>
         </section>
     </div>
-    
+
 </body>
 </html>

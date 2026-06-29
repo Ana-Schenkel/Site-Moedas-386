@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Perfil - EcoCoin</title>
     <link rel="stylesheet" href="style.css">
-    <script src="script_perfil.js"></script>
+    <script src="script_login_perfil.js"></script>
 </head>
-<body>
+<body id="pagina_perfil">
 
     <header>
         <div class="nav-container">
@@ -87,32 +87,6 @@
         <button class="btn-full-width btn-danger" onclick="logout()"> ❌ Sair da Conta</button>
 
     </main>
-
-    <!-- <script src="script.js"></script>
-    <script>
-        // Lógica específica para carregar os dados do aluno logado
-        window.onload = () => {
-            const alunoLogado = JSON.parse(localStorage.getItem('usuarioLogado'));
-
-            if (!alunoLogado) {
-                // Se não houver ninguém logado, volta para a home
-                alert("Por favor, faça login primeiro!");
-                window.location.href = 'login.html';
-            } else {
-                // Preenche o HTML com os dados da Planilha/localStorage
-                document.getElementById('nomeAluno').innerText = alunoLogado.nome;
-                document.getElementById('turmaAluno').innerText = alunoLogado.turma;
-                document.getElementById('saldoAluno').innerText = `🪙 ${alunoLogado.saldo.toFixed(2)} EcoCoins`;
-            }
-        };
-
-        function logout() {
-            localStorage.removeItem('usuarioLogado');
-            window.location.href = 'index.html';
-        }
-    </script>  -->
-
-    <p id="mensagem"></p>
 
 </body>
 </html>

@@ -1,7 +1,7 @@
 // ==========================================
 // 1. CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
 // ==========================================
-const API_URL = "https://script.google.com/macros/s/AKfycbx5i6Lfu2EP4DCWhKWSy_svczfblZklUO2nl1YyckzV8X5IMd0JKj71Y8FbIm2IB0M/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycby2Rb7zzG23sCtFLuUIkbXFn_q2gE4LvITZiTqKQ910p6mqTKRogZhd8gWVF4wx5Ns/exec"; 
 let dadosAlunos = [];
 let slideIndex = 0;
 

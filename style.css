@@ -338,6 +338,9 @@ tr:hover { background: #f9f9f9; }
     padding: 12px; border-radius: 6px; 
     font-weight: bold; cursor: pointer; 
 }
+.btn-entrar{
+    cursor: pointer;
+}
 
 .perfil-header{ width: 100%; background-image: linear-gradient(to right, #dfedf8, #bde2f5);}
 
@@ -412,6 +415,11 @@ tr:hover { background: #f9f9f9; }
     color: #070c6b;
     text-align: center;
 }
+
+#nova_conta {
+    display: none;
+}
+
 .area-cadastro{
     padding: 30px;
     justify-content: center;
