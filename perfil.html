@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Perfil - EcoCoin</title>
     <link rel="stylesheet" href="style.css">
+    <script src="script_perfil.js"></script>
 </head>
 <body>
 
@@ -29,6 +30,7 @@
             </div>
             <div class="perfil-info">
                 <h1 id="nomeAluno">Carregando...</h1>
+                <p>Matrícula: <strong id="matriculaAluno">---</strong></p>
                 <p>Turma: <strong id="turmaAluno">---</strong></p>
                 <span class="saldo-destaque" id="saldoAluno">🪙 0.00 EcoCoins</span>
             </div>
@@ -64,10 +66,11 @@
                     <thead>
                         <tr>
                             <th>Ação</th>
+                            <th>Data</th>
                             <th>Valor</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="atividadesAluno">
                         <tr>
                             <td>Sincronização com Planilha</td>
                             <td class="valor-positivo">OK</td>
@@ -85,7 +88,7 @@
 
     </main>
 
-    <script src="script.js"></script>
+    <!-- <script src="script.js"></script>
     <script>
         // Lógica específica para carregar os dados do aluno logado
         window.onload = () => {
@@ -107,7 +110,10 @@
             localStorage.removeItem('usuarioLogado');
             window.location.href = 'index.html';
         }
-    </script> 
+    </script>  -->
+
+    <p id="mensagem"></p>
+
 </body>
 </html>
 

@@ -1,7 +1,7 @@
 // ==========================================
 // 1. CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
 // ==========================================
-const API_URL = "https://script.google.com/macros/s/AKfycbx428DLzzvUR87YlascQsFtviMhfHT0q7vf21-UPoor88xSAAHJeWYIjQM9T8eOlWn9/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbx5i6Lfu2EP4DCWhKWSy_svczfblZklUO2nl1YyckzV8X5IMd0JKj71Y8FbIm2IB0M/exec"; 
 let dadosAlunos = [];
 let slideIndex = 0;
 
@@ -45,7 +45,7 @@ async function inicializarSite() {
 // ==========================================
 async function carregarDadosPlanilha() {
     try {
-        const resposta = await fetch(API_URL);
+        const resposta = await fetch(API_URL + "?aba=Dados Gerais");
         dadosAlunos = await resposta.json();
         console.log("Dados sincronizados com a planilha!");
     } catch (erro) {
@@ -151,28 +151,28 @@ function renderizarTabelaCompleta() {
 // ==========================================
 // 7. LOGIN E PERFIL
 // ==========================================
-function fazerLogin() {
-    const matricula = document.getElementById('inputMatricula').value;
-    const aluno = dadosAlunos.find(a => a.matricula.toString() === matricula);
+// function fazerLogin() {
+//     const matricula = document.getElementById('inputMatricula').value;
+//     const aluno = dadosAlunos.find(a => a.matricula.toString() === matricula);
 
-    if (aluno) {
-        localStorage.setItem('usuarioLogado', JSON.stringify(aluno));
-        window.location.href = 'perfil.html';
-    } else {
-        alert("Matrícula não encontrada! Verifique os dados com a secretaria.");
-    }
-}
+//     if (aluno) {
+//         localStorage.setItem('usuarioLogado', JSON.stringify(aluno));
+//         window.location.href = 'perfil.html';
+//     } else {
+//         alert("Matrícula não encontrada! Verifique os dados com a secretaria.");
+//     }
+// }
 
-function preencherDadosPerfil() {
-    const aluno = JSON.parse(localStorage.getItem('usuarioLogado'));
-    if (!aluno) {
-        window.location.href = 'index.html';
-        return;
-    }
-    document.getElementById('nomeAluno').innerText = aluno.nome;
-    document.getElementById('turmaAluno').innerText = aluno.turma;
-    document.getElementById('saldoAluno').innerText = `🪙 ${aluno.saldo.toFixed(2)} EcoCoins`;
-}
+// function preencherDadosPerfil() {
+//     const aluno = JSON.parse(localStorage.getItem('usuarioLogado'));
+//     if (!aluno) {
+//         window.location.href = 'index.html';
+//         return;
+//     }
+//     document.getElementById('nomeAluno').innerText = aluno.nome;
+//     document.getElementById('turmaAluno').innerText = aluno.turma;
+//     document.getElementById('saldoAluno').innerText = `🪙 ${aluno.saldo.toFixed(2)} EcoCoins`;
+// }
 
 // ==========================================
 // DISPARO NO CARREGAMENTO
