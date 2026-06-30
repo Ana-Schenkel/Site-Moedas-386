@@ -4,16 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EcoCoin - CIEP 386</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="estilo_index.css">
 </head>
 <body>
-
     <header>
-        <div class="nav-container">
-            <div class="logo-text">386 <span style="color: #0056b3;">EcoCoin</span></div>
+        <div class="conteiner-navegacao">
+            <div class="texto-logo">386 <span>EcoCoin</span></div>
             <nav>
                 <ul>
-                    <li><a href="index.html" class="active-link">INÍCIO</a></li>
+                    <li><a href="index.html" class="link-ativo">INÍCIO</a></li>
                     <li><a href="loja.html">LOJA</a></li>
                     <li><a href="ranking.html">RANKING</a></li>
                     <li><a href="perfil.html">PERFIL</a></li>
@@ -22,176 +21,136 @@
         </div>
     </header>
 
-    <section class="saudacao">
-        <h1>Olá, seja bem-vindo! </h1>
-        <p>O Moeda Escolar é o site onde você fica sabendo de tudo. ⟡</p>
-        <button class="btn-perfil-home" onclick="window.location.href='perfil.html'">Meu Perfil</button>
-    </section>
-
-    <main class="main-content">
+    <main class="conteiner-painel">
         
-        <section class="col-esquerda">
+        <section class="coluna-principal">
             
-            <div class="slideshow-container card">
-                <div class="mySlides fade">
-                    <img src="https://via.placeholder.com/800x300/0056b3/fff?text=Bem-vindo+ao+CIEP+386" style="width:100%">
-                    <div class="slide-caption">Gincana de Sustentabilidade 2026</div>
+            <div class="cartao-boas-vindas">
+                <div class="texto-boas-vindas">
+                    <h1>Olá, seja bem-vindo!</h1>
+                    <p>O Moeda Escolar é a plataforma central do CIEP 386 para você acompanhar seus pontos e conquistas ambientais. ⟡</p>
                 </div>
-                <div class="mySlides fade">
-                    <img src="https://via.placeholder.com/800x300/28a745/fff?text=Troque+seus+Reciclaveis" style="width:100%">
-                    <div class="slide-caption">Sexta-feira é dia de pesagem!</div>
-                </div>
-                <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
-                <a class="next" onclick="plusSlides(1)">&#10095;</a>
+                <button class="botao-principal-painel" onclick="location.href='perfil.html'">Acessar Meu Perfil</button>
             </div>
 
-            <div class="card card-aba">
-                <div class="aba-header">
-                    <span class="num active" onclick="mostrarEvento(1)">1</span>
-                    <span class="num" onclick="mostrarEvento(2)">2</span>
-                    <span class="num" onclick="mostrarEvento(3)">3</span>
-                    <span class="num" onclick="mostrarEvento(4)">4</span>
-                    <span class="num" onclick="mostrarEvento(5)">5</span>
+            <div class="conteiner-carrossel">
+                <div class="meus-slides efeito-suave">
+                    <img src="Imagens/dia-do-estudante-01.jpg" alt="Gincana">
+                    <div class="legenda-slide">Gincana de Sustentabilidade 2026</div>
                 </div>
-                <div class="content-box">
-                    <span class="tag-azul">🔵 PRÓXIMO EVENTO</span>
-                    <h2 id="evento-titulo"> Oficina de Reaproveitamento</h2>
-                    <p class="desc" id="evento-desc">Aprenda a criar objetos úteis com garrafas PET.</p>
-                    <p class="info-footer">Data: 25 de Março | Local: Pátio Central</p>
+                <div class="meus-slides efeito-suave">
+                    <img src="https://via.placeholder.com/800x340/227bdb/fff?text=Troque+seus+Reciclaveis" alt="Pesagem">
+                    <div class="legenda-slide">Sexta-feira é dia de pesagem!</div>
                 </div>
+                <a class="anterior" onclick="mudarSlide(-1)">&#10094;</a>
+                <a class="proximo" onclick="mudarSlide(1)">&#10095;</a>
             </div>
-            <div class="card card-aba card-loja">
-                <div class="content-box">
-                    <span class="tag-verde">🟢 DESTAQUE DA LOJA</span>
-                    <h2> Novos Itens Disponíveis</h2>
-                    <p class="desc">Cadernos e squeezes personalizados chegaram na nossa loja!</p>
-                    <button class="btn-loja-home" onclick="window.location.href='loja.html'">Ver na Loja</button>
+
+            <div class="cartao cartao-evento">
+                <div class="cabecalho-abas">
+                    <button class="botao-numero" onclick="mostrarEvento(1)">01</button>
+                    <button class="botao-numero" onclick="mostrarEvento(2)">02</button>
+                    <button class="botao-numero" onclick="mostrarEvento(3)">03</button>
                 </div>
-            </div>
-            <section>
-            <div class="content-box" style="margin: 20px 0 10px 10px;">
-                <h2>Outros Projetos</h2>
-            </div>
-            <div class="acordeon">
-                <div class="acordeon-item">
-                    <input type="checkbox" id="item1">
-                    <label for="item1">Montagem e Manutenção de Computadores</label>
-                    <div class="content">
-                        <h4>Oferecido pelo laboratório LIpE da UFRJ</h4>
-                        <p>O projeto oferece entendimento de que é necessário conhecer minimamente a tecnologia que usamos e como consertá-la para melhor se apropriar desta.</p>
-                        <p>Possibilita o aprendizado de conceitos básicos de hardware</p>
+
+                <div class="caixa-conteudo">
+                    <span id="tag-evento" class="tag-status">OFICINA</span>
+                    <h2 id="evento-titulo">Carregando título...</h2>
+                    <p class="descricao" id="evento-descricao">Carregando descrição...</p>
+                    <p class="rodape-info" id="evento-rodape">Carregando informações...</p>
+                    
+                    <div class="rodape-acao">
+                        <a id="link-botao-1" href="https://LINK-DO-FORMULARIO-1.com" target="_blank" class="botao-evento" style="display:none"><button class="botao-acao">Inscrever-se</button></a>
+                        <a id="link-botao-2" href="https://LINK-DO-FORMULARIO-2.com" target="_blank" class="botao-evento" style="display:none"><button class="btn-action">Inscrever-se</button></a>
+                        <a id="link-botao-3" href="https://LINK-DO-FORMULARIO-3.com" target="_blank" class="botao-evento" style="display:none"><button class="botao-acao">Inscrever-se</button></a>
                     </div>
                 </div>
-                <div class="acordeon-item">
-                    <input type="checkbox" id="item2">
-                    <label for="item2">Horta</label>
-                    <div class="content">
-                        <h4>Oferecido pelo Projeto Muda da UFRJ</h4>
-                        <p>Nele ocorre a criação e o fortalecimento de hortas urbanas e promoção de saneamento, agroecologia e saúde. No caso do Ciep 386, o projeto está envolvido em uma horta, que é cuidada pelos alunos.</p>
-                        <p>Os estudantes aprendem o fortalecimento da agroecologia a partir da ecopedagogia e autogestão.</p>
+            </div>
+
+            <div class="secao-projetos">
+                <h2 class="titulo-secao">Outros Projetos da Escola</h2>
+                <div class="acordeon">
+                    <div class="acordeon-item">
+                        <input type="checkbox" id="projeto1">
+                        <label for="projeto1">Montagem e Manutenção de Computadores</label>
+                        <div class="conteudo">
+                            <h4>Parceria LIpE/UFRJ</h4>
+                            <p>Aprenda conceitos fundamentais de hardware e infraestrutura digital básica de forma totalmente prática.</p>
+                        </div>
                     </div>
-                </div>
-                <div class="acordeon-item">
-                    <input type="checkbox" id="item3">
-                    <label for="item3">Apropriação Digital</label>
-                    <div class="content">
-                        <h4>Oferecido pelo laboratório LIpE da UFRJ</h4>
-                        <p>O projeto tem como objetivo auxiliar no processo de aprendizado do uso de recursos digitais (computador, celulares e outros) utilizados no cotidiano.</p>
-                        <p>Utiliza o computador e possibilita o aprendizado sobre as funções básicas necessárias: ligar, desligar, digitar documentos, salvar arquivos, usar a internet, planilha eletrônica e noções básicas de manutenção preventiva.</p>
+                    <div class="acordeon-item">
+                        <input type="checkbox" id="projeto2">
+                        <label for="projeto2">Horta Agroecológica</label>
+                        <div class="conteudo">
+                            <h4>Parceria Projeto Muda/UFRJ</h4>
+                            <p>Criação e manutenção de hortas urbanas, aplicando ecopedagogia, autogestão e sustentabilidade no CIEP.</p>
+                        </div>
                     </div>
-                </div>
-                <div class="acordeon-item">
-                    <input type="checkbox" id="item4">
-                    <label for="item4">Arduino</label>
-                    <div class="content">
-                        <p>Está relacionado ao desenvolvimento do projeto de automação da horta, que tem como finalidade a irrigação automática dela. </p>
+                    <div class="acordeon-item">
+                        <input type="checkbox" id="projeto3">
+                        <label for="projeto3">Apropriação Digital</label>
+                        <div class="conteudo">
+                            <h4>Parceria LIpE/UFRJ</h4>
+                            <p>Desenvolva fluência digital com as principais ferramentas do cotidiano: internet, planilhas eletrônicas e documentos.</p>
+                        </div>
+                    </div>
+                    <div class="acordeon-item">
+                        <input type="checkbox" id="projeto4">
+                        <label for="projeto4">Automação com Arduino</label>
+                        <div class="conteudo">
+                            <p>Desenvolvimento e calibração do sistema de irrigação automática com sensores para a horta escolar.</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
-        </section>
 
-        <aside class="col-direita">
+        <aside class="coluna-lateral">
+            <div class="cartao cartao-loja-destaque">
+                <span class="tag-status status-verde">Destaque da Loja</span>
+                <h2>Novos Itens!</h2>
+                <p>Cadernos e squeezes exclusivos chegaram na vitrine.</p>
+                <button class="botao-secundario" onclick="location.href='loja.html'">Visitar Loja</button>
+            </div>
 
-            <div class="card card-ranking">
-                <span class="ranking-title">Resumo por Turma</span>
-                <div class="turmas-ranking-grid" style="margin: 8px auto 10px auto;">
-                    <div class="turma-card gold-border">
-                        <span class="tag-azul" style="background: #ffc107; color: #000;">1º Lugar</span>
-                        <h3>3001</h3>
-                        <p class="valor-eco">15.2 kg</p>
+            <div class="cartao widget-ranking">
+                <h3 class="titulo-widget">Resumo por Turma</h3>
+                <div class="conteiner-grafico-ranking">
+                    <div class="linha-grafico">
+                        <div class="info-grafico"><span>0001</span><strong>0 kg</strong></div>
+                        <div class="fundo-barra-grafico"><div class="barra-grafico barra-ouro" style="width: 6%"></div></div>
                     </div>
-                    <div class="turma-card silver-border">
-                        <span class="tag-azul" style="background: #c0c0c0; color: #000;">2º Lugar</span>
-                        <h3>2002</h3>
-                        <p class="valor-eco">12.8 kg</p>
+                    <div class="linha-grafico">
+                        <div class="info-grafico"><span>0002</span><strong>0 kg</strong></div>
+                        <div class="fundo-barra-grafico"><div class="barra-grafico barra-prata" style="width: 4%"></div></div>
                     </div>
-                    <div class="turma-card bronze-border" >
-                        <span class="tag-azul" style="background: #cd7f32; color: #000;">3º Lugar</span>
-                        <h3>1001</h3>
-                        <p class="valor-eco">9.5 kg</p>
+                    <div class="linha-grafico">
+                        <div class="info-grafico"><span>0001</span><strong>0 kg</strong></div>
+                        <div class="fundo-barra-grafico"><div class="barra-grafico barra-bronze" style="width: 2%"></div></div>
                     </div>
-                    <div class="turma-card red-border" >
-                        <span class="tag-azul" style="background: #fa735b; color: #000;">4º Lugar</span>
-                        <h3>3005</h3>
-                        <p class="valor-eco">7.9 kg</p>
-                    </div>
-                    <div class="turma-card red-border">
-                        <span class="tag-azul" style="background: #fa735b; color: #000;">5º Lugar</span>
-                        <h3>1006</h3>
-                        <p class="valor-eco">6.8 kg</p>
-                    </div>
-                    <button class="btn-ranking" onclick="window.location.href='ranking.html'">Ver Tudo</button>
                 </div>
+                <button class="botao-texto" onclick="location.href='ranking.html'">Ver Ranking Geral →</button>
             </div>    
 
-            <div class="card card-ranking">
-                <h3 class="ranking-title">Ranking de Alunos</h3>
-                <ul id="podium-alunos-home" class="ranking-list">
-                    <li>Carregando líderes...</li>
-                </ul>
-                <button class="btn-ranking" onclick="window.location.href='ranking.html'">Ver Tudo</button>
+            <div class="cartao widget-ranking">
+                <h3 class="titulo-widget">Líderes Gerais</h3>
+                <div id="podio-lideres-gerais" class="lista-resumo-ranking">
+                    <div style="color: var(--texto-suave); padding: 10px; text-align: center;">Carregando líderes...</div>
+                </div>
             </div>
 
-            <div class="card card-ranking">
-                <span class="ranking-title">Mestres das moedas - 2° Tri</span>
-                <div class="turmas-ranking-grid" style="margin: 8px auto 10px auto;">
-                    <div class="turma-card gold-border">
-                        <span class="tag-posicao" style="color: #ffbf00;">1. Fernanda L. Siva</span>
-                        <h3>3003</h3>
-                        <p class="valor-eco">635</p>
-                    </div>
-                    <div class="turma-card silver-border">
-                        <span class="tag-posicao" style="color: #a09e9e;">2. Lucas O. Ferreira</span>
-                        <h3>1001</h3>
-                        <p class="valor-eco">580</p>
-                    </div>
-                    <div class="turma-card bronze-border" >
-                        <span class="tag-posicao" style="color: #b97128;">3. Mariana M. de Souza</span>
-                        <h3>2001</h3>
-                        <p class="valor-eco">560</p>
-                    </div>
-                    <div class="turma-card red-border" >
-                        <span class="tag-posicao" style="color: #fc6044;">4. José F. Silva</span>
-                        <h3>2006</h3>
-                        <p class="valor-eco">555</p>
-                    </div>
-                    <div class="turma-card red-border">
-                        <span class="tag-posicao" style="color: #fc6044;">5. Luan Lopes</span>
-                        <h3>1002</h3>
-                        <p class="valor-eco">500</p>
-                    </div>
-                    <button class="btn-ranking" onclick="window.location.href='ranking.html'">Ver Tudo</button>
+            <div class="cartao widget-ranking">
+                <h3 class="titulo-widget">Mestres das Moedas</h3>
+                <div id="podio-mestres-moedas" class="lista-resumo-ranking">
+                    <div style="color: var(--texto-suave); padding: 10px; text-align: center;">Carregando mestres...</div>
                 </div>
             </div>    
         </aside>
-        
     </main>
     
-    <footer style="text-align: center; padding: 30px; color: #888; font-size: 0.8rem;">
-        &copy; 2026 CIEP 386 - Projeto Sustentabilidade Escolar. Dados atualizados via Google Sheets.
-    </footer>
-
+    <footer>&copy; 2026 CIEP 386 - Projeto Sustentabilidade Escolar. Conectado ao Google Sheets.</footer>
+    
     <script src="script.js"></script>
+    <script src="script_index.js"></script>
 </body>
 </html>

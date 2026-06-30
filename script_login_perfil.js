@@ -3,6 +3,8 @@
 // ==========================================
 const alunoLogado = Number(sessionStorage.getItem("alunoLogado"));
 
+// localStorage.clear();
+
 const API_URL_perfil = "https://script.google.com/macros/s/AKfycby2Rb7zzG23sCtFLuUIkbXFn_q2gE4LvITZiTqKQ910p6mqTKRogZhd8gWVF4wx5Ns/exec"; 
 let dadosAlunosPerfil = [];
 
@@ -14,22 +16,25 @@ let dadosAlunosLogin = [];
 // ==========================================
 async function inicializarPerfil() {
 
+    // Busca dados da planilha do Google
+    await carregarPlanilhaLogin();
+    await carregarPlanilhaPerfil();
+    console.log("Dados de login carregados:");
+    console.log("Dados do perfil carregados:");
+
     const pagina = document.body.id;
 
-    // Se não houver ninguém logado, vai para o login
     if (!alunoLogado) {
-        await carregarPlanilhaLogin();
-        console.log("Dados de login carregados:");
-        
+        // Se não houver ninguém logado, vai para o login
+        console.log(pagina);
         if (pagina === "pagina_perfil") {
             alert("Por favor, faça login primeiro!");
             window.location.href = 'login.html';
         } else {
             await inicializarLogin();
         }
-    // Se houver alguém logado, carrega os dados do perfil
     } else {
-        const aluno = await carregarPerfilAluno(alunoLogado);
+        const aluno = await carregarPerfilAluno(alunoLogado); // Substitua pelo ID correto da aba do aluno
         console.log("Dados do aluno logado:", aluno);
     }
 }
@@ -64,8 +69,31 @@ async function carregarPlanilhaPerfil() {
 }
 
 // ==========================================
-// 4. CONFIGURAÇÕES DE LOGIN E CADASTRO
+// 2. CONFIGURAÇÕES DE LOGIN
 // ==========================================
+
+async function trocaPaginaCadastro() {
+    
+    const botao_conta = document.getElementById("btn_conta");
+    const login = document.getElementById("login");
+    const novaConta = document.getElementById("nova_conta");
+
+    if (login.style.display !== "none") {
+        // Esconde o login
+        login.style.display = "none";
+        // Mostra o cadastro
+        novaConta.style.display = "block";
+        // Altera o texto do botão
+        botao_conta.textContent = "Já tenho conta";
+    } else {
+        // Mostra o login
+        login.style.display = "block";
+        // Esconde o cadastro
+        novaConta.style.display = "none";
+        // Altera o texto do botão
+        botao_conta.textContent = "Não tenho conta";
+    }
+}
 
 async function inicializarLogin() {
     
@@ -80,12 +108,11 @@ async function inicializarLogin() {
     });
 
     botao_inicio.addEventListener("click", () => {
-        // Volta para a página inicial
         window.location.href = 'index.html';
     });
 
     botao_entrar.addEventListener("click", () => {
-        fazerLogin();
+        verificarLogin();
     });
 
     // botao_esqueci_senha.addEventListener("click", () => {
@@ -97,34 +124,11 @@ async function inicializarLogin() {
     });
 }
 
-async function trocaPaginaCadastro() {
-    
-    const titulo = document.getElementById("titulo");
-    const botao_conta = document.getElementById("btn_conta");
-    const login = document.getElementById("login");
-    const novaConta = document.getElementById("nova_conta");
+// ==========================================
+// 2. Verificar dados de login
+// ==========================================
 
-    // Alterna a visibilidade do login e do cadastro
-    if (login.style.display !== "none") {
-        // Esconde o login e mostra o cadastro
-        login.style.display = "none";
-        novaConta.style.display = "block";
-        botao_conta.textContent = "Já tenho conta";
-        titulo.textContent = "Nova conta";
-    } else {
-        // Esconde o cadastro e mostra o login
-        login.style.display = "block";
-        novaConta.style.display = "none";
-        botao_conta.textContent = "Não tenho conta";
-        titulo.textContent = "Acesse sua conta";
-    }
-}
-
-// ============================================================
-// 5. FUNÇÕES DE LOGIN E CADASTRO (VALIDAÇÃO E ENVIO DE DADOS)
-// ============================================================
-
-async function fazerLogin() {
+async function verificarLogin() {
 
     const email = document.getElementById("email_login").value.trim().toLowerCase();
     const senha = document.getElementById("senha_login").value.trim();
@@ -159,13 +163,7 @@ async function fazerCadastro() {
     const turma = document.getElementById("turma_cadastro").value.trim();
     const email = document.getElementById("email_cadastro").value.trim().toLowerCase();
     const senha = document.getElementById("senha_cadastro").value.trim();
-    const confSenha = document.getElementById("confsenha").value.trim();
 
-    if (senha !== confSenha) {
-        alert("As senhas não coincidem! Por favor, tente novamente.");
-        return;
-    }
-    
     for (let i = 1; i < dadosAlunosLogin.length; i++) {
         const emailPlanilha = String(dadosAlunosLogin[i][3]).trim().toLowerCase();
         if (emailPlanilha === email) {
@@ -192,9 +190,6 @@ async function fazerCadastro() {
 
     console.log("Cadastro realizado para:", nome, matricula, turma, email);
 
-    await carregarPlanilhaPerfil();
-    console.log("Dados do perfil carregados:");
-
     await fetch(API_URL_perfil, {
         method: "POST",
         body: JSON.stringify({
@@ -204,14 +199,15 @@ async function fazerCadastro() {
         })
     });
 
-    alert("Cadastro realizado! Você será redirecionado para a página de login. Aguarde alguns minutos para que os dados sejam sincronizados. Recarregue a página de login se necessário.");
+    alert("Cadastro realizado! Aguarde alguns minutos para que os dados sejam sincronizados. Você será redirecionado para a página de login.");
+
     trocaPaginaCadastro();
 }
 
 
-// ===============================================
-// 6. CARREGAMENTO DE DADOS DO PERFIL DO ALUNO
-// ===============================================
+// ==========================================
+// 2. Carregar os dados do Perfil do aluno logado
+// ==========================================
 
 function formatarData(dataJSON) {
     const data = new Date(dataJSON);
@@ -261,15 +257,9 @@ async function carregarPerfilAluno(nomeAba_matricula) {
 
         tbody.appendChild(tr);
     }
-
-    const botao_sair = document.getElementById("btn_sair");
-
-    botao_sair.addEventListener("click", () => {
-        sessionStorage.removeItem("alunoLogado");
-        window.location.href = 'login.html';
-    });
-
     return await dadosAluno;
 }
+
+
 
 window.onload = inicializarPerfil;
