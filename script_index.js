@@ -1,7 +1,7 @@
 // ==========================================
 // CONFIGURAÇÕES E VARIÁVEIS GLOBAIS DO INDEX
 // ==========================================
-const API_URL_index = "https://script.google.com/macros/s/AKfycby2Rb7zzG23sCtFLuUIkbXFn_q2gE4LvITZiTqKQ910p6mqTKRogZhd8gWVF4wx5Ns/exec";
+const API_URL_index = "https://script.google.com/macros/s/AKfycbyr35zQWckx2M17VxIcffnu01L4Aw682CpP8BSCwAoptlWS0nahNAzik07LbWl8VbY/exec";
 
 // --- BANCO DE DADOS LOCAL DOS EVENTOS ---
 const bancoEventos = {
@@ -28,26 +28,18 @@ const bancoEventos = {
     }
 };
 
-// Variável de controle do Carrossel
-let slideIndex = 1;
+let slideIndexIndex = 1;
 
-// Executa tudo ao carregar a página
 window.addEventListener('DOMContentLoaded', async () => {
-    // 1. Inicializa o Carrossel de Imagens
-    mostrarSlides(slideIndex);
-    // Configura para passar o slide sozinho a cada 5 segundos
+    mostrarSlides(slideIndexIndex);
     setInterval(() => { mudarSlide(1); }, 5000);
-
-    // 2. Inicializa as Abas carregando o Evento 01 por padrão
     mostrarEvento(1);
 
-    // 3. Carrega os Mini Rankings Dinâmicos do Google Sheets
     try {
         const resposta = await fetch(`${API_URL_index}?aba=Dados Gerais`);
         if (!resposta.ok) throw new Error("Erro de resposta do servidor Google.");
         
         const dadosAlunos = await resposta.json();
-
         if (dadosAlunos && dadosAlunos.length > 1) {
             gerarMinisRankings(dadosAlunos);
         }
@@ -59,90 +51,57 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// ==========================================
-// CONTROLE DO SISTEMA DE EVENTOS (ABAS)
-// ==========================================
 function mostrarEvento(numeroEvento) {
     const evento = bancoEventos[numeroEvento];
     if (!evento) return;
 
-    // Injeta os dados nos elementos HTML
     const tagElemento = document.getElementById("tag-evento");
     tagElemento.innerText = evento.tag;
     document.getElementById("evento-titulo").innerText = evento.titulo;
     document.getElementById("evento-descricao").innerText = evento.descricao;
     document.getElementById("evento-rodape").innerText = evento.rodape;
 
-    // Atualiza a cor de fundo da tag dependendo da categoria
     if (evento.tag === "Esporte") {
-        tagElemento.style.backgroundColor = "#0e4768"; // Verde
+        tagElemento.style.backgroundColor = "#0e4768";
     } else if (evento.tag === "Oficina") {
-        tagElemento.style.backgroundColor = "#fd7e14"; // Laranja
+        tagElemento.style.backgroundColor = "#fd7e14";
     } else {
-        tagElemento.style.backgroundColor = "var(--cor-primaria)"; // Azul padrão
+        tagElemento.style.backgroundColor = "var(--primary-blue)";
     }
 
-    // Gerencia a visibilidade dos botões de inscrição
     for (let i = 1; i <= 3; i++) {
         const botaoContainer = document.getElementById(`link-botao-${i}`);
-        if (i === numeroEvento) {
-            botaoContainer.style.display = "inline-block";
-        } else {
-            botaoContainer.style.display = "none";
-        }
+        if (botaoContainer) botaoContainer.style.display = (i === numeroEvento) ? "inline-block" : "none";
     }
 
-    // Altera o estado ativo visual nos botões numéricos (01, 02, 03)
     const botoesNumeros = document.querySelectorAll(".botao-numero");
     botoesNumeros.forEach((btn, index) => {
-        if (index + 1 === numeroEvento) {
-            btn.classList.add("ativo");
-        } else {
-            btn.classList.remove("ativo");
-        }
+        if (index + 1 === numeroEvento) btn.classList.add("ativo");
+        else btn.classList.remove("ativo");
     });
 }
 
-// ==========================================
-// CONTROLE DO CARROSSEL DE IMAGENS
-// ==========================================
-function mudarSlide(n) {
-    mostrarSlides(slideIndex += n);
-}
+function mudarSlide(n) { mostrarSlides(slideIndexIndex += n); }
 
 function mostrarSlides(n) {
     let slides = document.getElementsByClassName("meus-slides");
     if (slides.length === 0) return;
-    
-    if (n > slides.length) { slideIndex = 1 }
-    if (n < 1) { slideIndex = slides.length }
-    
-    for (let i = 0; i < slides.length; i++) {
-        slides[i].style.display = "none";
-    }
-    
-    slides[slideIndex - 1].style.display = "block";
+    if (n > slides.length) { slideIndexIndex = 1 }
+    if (n < 1) { slideIndexIndex = slides.length }
+    for (let i = 0; i < slides.length; i++) { slides[i].style.display = "none"; }
+    slides[slideIndexIndex - 1].style.display = "block";
 }
 
-// ==========================================
-// LOGICA DOS MINI RANKINGS (GOOGLE SHEETS)
-// ==========================================
 function gerarMinisRankings(dados) {
     let listaAlunos = [];
-
     for (let i = 1; i < dados.length; i++) {
         const nome = String(dados[i][1]).trim();  
         const turma = String(dados[i][2]).trim(); 
-        
         const ganho = parseFloat(String(dados[i][3]).replace(',', '.')) || 0; 
         const gasto = Math.abs(parseFloat(String(dados[i][4]).replace(',', '.'))) || 0; 
 
         if (nome) {
-            listaAlunos.push({
-                identificacao: `${nome} (${turma})`,
-                ganhoTotal: ganho,
-                gastoTotal: gasto
-            });
+            listaAlunos.push({ identificacao: `${nome} (${turma})`, ganhoTotal: ganho, gastoTotal: gasto });
         }
     }
 
@@ -155,25 +114,18 @@ function gerarMinisRankings(dados) {
 
 function construirPodioGrafico(idConteiner, dadosTop, chaveMetrica) {
     const conteiner = document.getElementById(idConteiner);
+    if (!conteiner) return;
     conteiner.innerHTML = ""; 
 
-    if (dadosTop.length === 0) {
-        conteiner.innerHTML = `<div style="color: var(--texto-suave); text-align: center; padding: 10px;">Sem registros salvos.</div>`;
-        return;
-    }
-
     const estilosMedalha = ["podio-ouro", "podio-prata", "podio-bronze"];
-
     dadosTop.forEach((aluno, index) => {
         const elementoLinha = document.createElement("div");
         elementoLinha.className = `linha-linha-podio ${estilosMedalha[index]}`;
-        
         elementoLinha.innerHTML = `
             <span class="emblema-medalha">${index + 1}º</span>
             <span class="nome-usuario" title="${aluno.identificacao}">${aluno.identificacao}</span>
             <strong>${aluno[chaveMetrica].toFixed(0)} 🪙</strong>
         `;
-        
         conteiner.appendChild(elementoLinha);
     });
 }

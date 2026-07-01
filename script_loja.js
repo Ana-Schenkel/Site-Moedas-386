@@ -1,67 +1,92 @@
-// ==========================================
-// CONFIGURAÇÕES E VARIÁVEIS GLOBAIS DA LOJA
-// ==========================================
-const alunoLogadoLoja = sessionStorage.getItem("alunoLogado") ? sessionStorage.getItem("alunoLogado").toString().trim() : "";
-
-// URL da Web App gerada após a implantação estável da planilha "Site 386"
 const API_URL_loja = "https://script.google.com/macros/s/AKfycbyr35zQWckx2M17VxIcffnu01L4Aw682CpP8BSCwAoptlWS0nahNAzik07LbWl8VbY/exec"; 
 
+const alunoLogadoLoja = sessionStorage.getItem("alunoLogado") ? sessionStorage.getItem("alunoLogado").toString().trim() : "";
 let saldoAtualAluno = 0; 
 let nomeAtualAluno = "";
 let cachePedidosDoAluno = []; 
 
-// Executa automaticamente ao carregar a página
 window.addEventListener('DOMContentLoaded', async () => {
     if (!alunoLogadoLoja) {
-        document.getElementById('saldoExibido').innerText = `🪙 Faça login para ver seu saldo`;
+        document.getElementById('saldoExibido').innerText = `🪙 Faça login no Perfil para ver seu saldo e resgatar prêmios`;
+        configurarBotoesAcesso(true); 
         return;
     }
 
+    configurarBotoesAcesso(false);
+
     try {
-        // 1. Carrega o Saldo Real do Aluno vindo de sua Aba correspondente
         const resposta = await fetch(`${API_URL_loja}?aba=${alunoLogadoLoja}`);
-        if (!resposta.ok) throw new Error("Erro de resposta vindo da rede.");
+        if (!resposta.ok) throw new Error("Erro de resposta vindo da rede Google.");
         
         const dadosAluno = await resposta.json();
         
         if (dadosAluno && dadosAluno.length > 5) {
             nomeAtualAluno = String(dadosAluno[1][0]).trim(); 
-            
             let saldoTexto = String(dadosAluno[5][1]).replace(',', '.').trim();
-            saldoAtualAluno = parseFloat(saldoTexto); 
+            saldoAtualAluno = parseFloat(saldoTexto) || 0;
             
-            if (isNaN(saldoAtualAluno)) saldoAtualAluno = 0;
+            document.getElementById('saldoExibido').innerText = `Olá, ${nomeAtualAluno} | Seu Saldo: 🪙 ${saldoAtualAluno.toFixed(2)} EcoCoins`;
             
-            document.getElementById('saldoExibido').innerText = `🪙 ${saldoAtualAluno.toFixed(2)} EcoCoins`;
-            
-            // 2. Tendo o saldo carregado com sucesso, puxa a lista de pedidos históricos
             carregarPedidosDoAluno();
         } else {
-            document.getElementById('saldoExibido').innerText = `🪙 Erro na estrutura dos dados`;
+            document.getElementById('saldoExibido').innerText = `🪙 Erro na leitura estrutural da sua Ficha.`;
         }
-        
     } catch (erro) {
-        console.error("Erro ao processar saldo na inicialização:", erro);
-        document.getElementById('saldoExibido').innerText = `🪙 Erro ao carregar saldo`;
+        console.error("Erro na inicialização da loja:", erro);
+        document.getElementById('saldoExibido').innerText = `🪙 Modo Offline: Erro ao sincronizar saldo.`;
     }
 });
 
-// Busca todas as compras ocorridas na aba "Pedidos Loja" que batem com este aluno
+function configurarBotoesAcesso(bloquear) {
+    const botoes = document.querySelectorAll('.botao-resgatar');
+    botoes.forEach(botao => {
+        botao.disabled = bloquear;
+        botao.innerText = bloquear ? "Faça Login" : "Resgatar";
+        if (bloquear) botao.style.background = "#94a3b8"; 
+        else botao.style.background = ""; 
+    });
+}
+
+// CORRIGIDO: Lendo os índices de coluna corretos da sua planilha
 async function carregarPedidosDoAluno() {
     try {
         const resposta = await fetch(`${API_URL_loja}?aba=Pedidos Loja`);
         if (!resposta.ok) throw new Error("Erro ao buscar histórico da loja");
         
         const todosOsPedidos = await resposta.json();
-        
         cachePedidosDoAluno = [];
-        for (let i = 1; i < todosOsPedidos.length; i++) {
-            const matriculaPedido = String(todosOsPedidos[i][1]).trim();
-            if (matriculaPedido === alunoLogadoLoja) {
-                cachePedidosDoAluno.push({
-                    item: todosOsPedidos[i][3],   
-                    valor: todosOsPedidos[i][4],  
-                    status: todosOsPedidos[i][5]  
+        
+        if (todosOsPedidos && todosOsPedidos.length > 0) {
+            const eMatrizPura = Array.isArray(todosOsPedidos[0]);
+
+            if (eMatrizPura) {
+                // Formato Matriz
+                for (let i = 1; i < todosOsPedidos.length; i++) {
+                    const linha = todosOsPedidos[i];
+                    if (!linha || linha.length < 5) continue;
+
+                    // Na sua planilha, a Matrícula está na Coluna B (Índice 1)
+                    const matPedido = String(linha[1] || "").trim();
+                    
+                    if (matPedido === alunoLogadoLoja) {
+                        cachePedidosDoAluno.push({
+                            item: String(linha[3] || "Item"), // Coluna D (Índice 3)
+                            valor: parseFloat(String(linha[4] || "0").replace(',', '.')), // Coluna E (Índice 4)
+                            status: String(linha[5] || "Pendente") // Coluna F (Índice 5)
+                        });
+                    }
+                }
+            } else {
+                // Formato JSON
+                todosOsPedidos.forEach(pedido => {
+                    const matPedido = String(pedido.matricula || pedido["Matrícula"] || "").trim();
+                    if (matPedido === alunoLogadoLoja) {
+                        cachePedidosDoAluno.push({
+                            item: pedido.item || pedido["Item Solicitado"] || "Item",   
+                            valor: parseFloat(String(pedido.valor || pedido["Valor (EcoCoins)"] || 0).replace(',', '.')),  
+                            status: pedido.status || pedido["Status"] || "Pendente"  
+                        });
+                    }
                 });
             }
         }
@@ -76,30 +101,29 @@ async function carregarPedidosDoAluno() {
     }
 }
 
-// Renderiza fisicamente as linhas no HTML
 function renderizarTabelaPedidos(listaDePedidos) {
     const tbody = document.getElementById("listaPedidosAluno");
+    if (!tbody) return;
     tbody.innerHTML = ""; 
 
     if (listaDePedidos.length === 0) {
-        tbody.innerHTML = `
-            <tr><td colspan="3" style="padding: 24px; text-align: center; color: var(--texto-suave);">Nenhum pedido correspondente encontrado.</td></tr>
-        `;
+        tbody.innerHTML = `<tr><td colspan="3" style="padding:24px; text-align:center; color:var(--text-gray);">Nenhum pedido realizado até o momento.</td></tr>`;
         return;
     }
 
     listaDePedidos.forEach(pedido => {
-        let corFundo = "#fef3c7"; let corTexto = "#d97706"; // Pendente (Amarelo)
-        if (pedido.status === "Aprovado") { corFundo = "#dbeafe"; corTexto = "var(--cor-primaria)"; } 
-        if (pedido.status === "Resgatado") { corFundo = "#dcfce7"; corTexto = "var(--cor-sucesso)"; } 
+        let corFundo = "#fef3c7"; let corTexto = "#d97706"; 
+        
+        // Mantém as cores certas se o monitor aprovar
+        if (pedido.status === "Aprovado") { corFundo = "#dbeafe"; corTexto = "var(--primary-blue)"; } 
+        if (pedido.status === "Resgatado") { corFundo = "#dcfce7"; corTexto = "var(--success-green)"; } 
 
         const tr = document.createElement("tr");
-        tr.style.borderBottom = "1px solid var(--cor-borda)";
         tr.innerHTML = `
-            <td style="padding: 14px 16px; font-weight: 700; color: var(--texto-principal);">${pedido.item}</td>
-            <td style="padding: 14px 16px; font-weight: 600; color: var(--texto-suave);">🪙 ${Number(pedido.valor).toFixed(2)}</td>
-            <td style="padding: 14px 16px; text-align: center;">
-                <span style="background: ${corFundo}; color: ${corTexto}; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; display: inline-block; text-transform: uppercase;">
+            <td style="padding:14px 16px; font-weight:700;">${pedido.item}</td>
+            <td style="padding:14px 16px; font-weight:600; color:var(--text-gray);">🪙 ${Number(pedido.valor).toFixed(2)}</td>
+            <td style="padding:14px 16px; text-align:center;">
+                <span style="background:${corFundo}; color:${corTexto}; padding:6px 14px; border-radius:20px; font-size:0.75rem; font-weight:700; display:inline-block; text-transform:uppercase;">
                     ${pedido.status}
                 </span>
             </td>
@@ -108,70 +132,37 @@ function renderizarTabelaPedidos(listaDePedidos) {
     });
 }
 
-// Filtro por Status acionado pelo Select
-function filtrarPedidosPorStatus() {
-    const statusSelecionado = document.getElementById("filtroStatusPedido").value;
-    
-    if (statusSelecionado === "todos") {
-        renderizarTabelaPedidos(cachePedidosDoAluno);
-    } else {
-        const pedidosFiltrados = cachePedidosDoAluno.filter(pedido => pedido.status === statusSelecionado);
-        renderizarTabelaPedidos(pedidosFiltrados);
-    }
-}
-
-// Dispara uma solicitação POST criando uma linha pendente na planilha
 async function resgatarItem(nomeItem) {
-    if (!alunoLogadoLoja) {
-        alert("Você precisa estar logado para resgatar itens!");
-        window.location.href = 'login.html';
-        return;
-    }
-
-    const precos = {
-        'Caderno': 30.00,
-        'Vale Cinema': 50.00,
-        'Combo Pipoca': 20.00,
-        'Kit Canetas': 15.00
-    };
-
+    const precos = { 'Caderno': 30.00, 'Vale Cinema': 50.00, 'Combo Pipoca': 20.00, 'Kit Canetas': 15.00 };
     const precoItem = precos[nomeItem] || 0;
 
     if (saldoAtualAluno < precoItem) {
-        alert(`Saldo insuficiente! Você tem 🪙 ${saldoAtualAluno.toFixed(2)} EcoCoins, mas o item custa 🪙 ${precoItem.toFixed(2)}.`);
+        alert(`Saldo insuficiente! Você possui 🪙 ${saldoAtualAluno.toFixed(2)}, mas este item custa 🪙 ${precoItem.toFixed(2)}.`);
         return;
     }
     
-    if (!confirm(`Deseja realmente trocar 🪙 ${precoItem.toFixed(2)} EcoCoins por: ${nomeItem}?`)) {
-        return;
-    }
+    if (!confirm(`Confirmar o envio do pedido de "${nomeItem}" para a loja?`)) return;
 
     const dadosPedido = {
-        "acao": "novoPedido",
         "matricula": String(alunoLogadoLoja),
-        "nome": String(nomeAtualAluno), 
-        "item": String(nomeItem)
+        "nomeAluno": String(nomeAtualAluno), 
+        "item": String(nomeItem),
+        "valor": precoItem,
+        "status": "Pendente" // ENVIANDO "PENDENTE" EXATAMENTE COMO VOCÊ PEDIU
     };
 
     try {
-        const resposta = await fetch(API_URL_loja, {
+        await fetch(API_URL_loja, {
             method: "POST",
-            headers: {
-                "Content-Type": "text/plain"
-            },
+            headers: { "Content-Type": "text/plain" },
             body: JSON.stringify(dadosPedido)
         });
         
-        const resultado = await resposta.text();
-
-        if (resultado.trim() === "Pedido Registrado com Sucesso") {
-            alert(`Sucesso! Pedido de "${nomeItem}" enviado.\nAcompanhe o status no painel inferior!`);
-            location.reload(); 
-        } else {
-            alert("Resposta inesperada do servidor: " + resultado);
-        }
+        alert(`Sucesso! O pedido de "${nomeItem}" foi enviado e está Pendente.`);
+        location.reload(); 
     } catch (erro) {
-        console.error("Falha crítica ao tentar enviar o POST do pedido:", erro);
-        alert("Erro de conexão com a planilha. O pedido não pôde ser salvo.");
+        console.error("Falha ao registrar pedido via POST:", erro);
+        alert("Erro de conexão! O pedido não pôde ser computado na planilha.");
+        location.reload();
     }
 }

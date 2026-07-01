@@ -8,88 +8,68 @@
     <script src="script_login_perfil.js"></script>
 </head>
 <body id="pagina_perfil">
-
     <header>
-        <div class="nav-container">
-            <div class="logo-text">386 <span style="color: #0056b3;">EcoCoin</span></div>
-            <nav>
-                <ul>
-                    <li><a href="index.html">INÍCIO</a></li>
-                    <li><a href="loja.html">LOJA</a></li>
-                    <li><a href="ranking.html">RANKING</a></li>
-                    <li><a href="perfil.html" class="active-link">PERFIL</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+        </header>
 
-    <main class="main-content-single" style="width: 1000px;">      
+    <main class="main-content-single">      
         <div class="card perfil-header">
             <div class="perfil-avatar">
-                <img src="Imagens/usuario1.png" alt="Foto do Aluno" style="width: 100%; border-radius: 50%;">
+                <img src="Imagens/usuario1.png" alt="Foto do Aluno">
             </div>
             <div class="perfil-info">
                 <h1 id="nomeAluno">Carregando...</h1>
-                <p>Matrícula: <strong id="matriculaAluno">---</strong></p>
-                <p>Turma: <strong id="turmaAluno">---</strong></p>
-                <span class="saldo-destaque" id="saldoAluno">🪙 0.00 EcoCoins</span>
+                <p>
+                    <strong>Matrícula:</strong> <span id="matriculaAluno"></span> | 
+                    <strong>Turma:</strong> <span id="turmaAluno"></span>
+                </p>
+                <div id="saldoAluno" style="font-weight: bold; margin-top: 10px; font-size: 1.2rem;"></div>
             </div>
         </div>
 
-        <section class="conquistas-perfil">
-            <div class="conquistas" style="padding: 20px;">
-                <span class="card-title" style="font-size: 21px; font-weight: 600;"> Minhas Conquistas</span>
-                <div class="conquistas-grid">
-                    <div class="conquista-item";>
-                        <div class="badge-icon">🚀</div>
-                        <h4>Pioneiro</h4>
-                        <p>Primeiro acesso ao portal</p>
-                    </div>
-                    <div class="conquista-item bloqueada">
-                        <div class="badge-icon">🌿</div>
-                        <h4>Eco-Herói</h4>
-                        <p>Doe 5kg de recicláveis</p>
-                    </div>
-                    <div class="conquista-item bloqueada">
-                        <div class="badge-icon">🛍️</div>
-                        <h4>Consumidor</h4>
-                        <p>Faça sua primeira compra</p>
-                    </div>
+        <div class="card">
+            <span class="card-title">Minhas Conquistas</span>
+            <div class="conquistas-grid">
+                <div class="conquista-item">
+                    <div class="badge-icon">🚀</div>
+                    <h4 style="font-weight: 700; margin-top: 4px;">Pioneiro</h4>
+                </div>
+                <div class="conquista-item bloqueada">
+                    <div class="badge-icon">🌿</div>
+                    <h4 style="font-weight: 700; margin-top: 4px;">Eco-Herói</h4>
+                </div>
+                <div class="conquista-item bloqueada">
+                    <div class="badge-icon">🛍️</div>
+                    <h4 style="font-weight: 700; margin-top: 4px;">Consumidor</h4>
                 </div>
             </div>
-        </section>
+        </div>
         
-        <section class="informacoes-perfil" style="width: 100%;">
-            <div class="card historico">
-                <span class="card-title" style="font-size: 21px; font-weight: 600;">Últimas Atividades</span>
-                <table class="tabela-historico">
-                    <thead>
-                        <tr>
-                            <th>Ação</th>
-                            <th>Data</th>
-                            <th>Valor</th>
-                        </tr>
-                    </thead>
-                    <tbody id="atividadesAluno">
-                        <tr>
-                            <td>Sincronização com Planilha</td>
-                            <td class="valor-positivo">OK</td>
-                        </tr>
-                        <tr>
-                            <td>Bônus de Cadastro</td>
-                            <td class="valor-positivo">+10.00</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+        <div class="card">
+            <span class="card-title">Últimas Atividades</span>
+            <table class="tabela-historico">
+                <thead>
+                    <tr>
+                        <th>Ação</th>
+                        <th>Data</th>
+                        <th>Valor</th>
+                    </tr>
+                </thead>
+                <tbody id="atividadesAluno">
+                    <tr>
+                        <td colspan="3" style="text-align: center; color: var(--text-gray); padding: 20px;">
+                            Carregando suas atividades...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-        <button id="btn_sair" class="btn-full-width btn-danger" > ❌ Sair da Conta</button>
-
+        <button id="btn_sair" class="btn-full-width" onclick="sessionStorage.clear(); window.location.href='login.html';">
+            ❌ Sair da Conta
+        </button>
     </main>
 
+    <footer></footer>
+    <script src="script.js"></script>
 </body>
 </html>
-
-
-<!-- foto de perfil estudante https://via.placeholder.com/150/0056b3/ffffff?text=ESTUDANTE -->

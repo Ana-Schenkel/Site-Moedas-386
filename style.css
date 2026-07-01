@@ -1,443 +1,347 @@
 /* ==========================================
-   1. VARIÁVEIS E CONFIGURAÇÕES GERAIS
+   1. ESTILOS GLOBAIS (Compartilhados por todo o site)
    ========================================== */
 :root {
     --primary-blue: #227bdb;
-    --primary-dark: #004a99;
-    --success-green: #28a745;
-    --bg-light: #f4fdfc;
+    --primary-dark: #175aa3;
+    --success-green: #16a34a;
+    --bg-light: #f8fafc;        
     --white: #ffffff;
-    --text-dark: #1c1e21;
-    --text-gray: #65676b;
-    --border: #dddfe2;
-    --gold: #ffdf00;
+    --text-dark: #1e293b;       
+    --text-gray: #64748b;       
+    --border: #e2e8f0;          
+    --raio-grande: 16px;
+    --raio-medio: 12px;
+    --sombra-media: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.02);
+
+    /* Cores do Pódio Metálico */
+    --ouro: #f59e0b;
+    --ouro-claro: #fef3c7;
+    --prata: #94a3b8;
+    --prata-claro: #f1f5f9;
+    --bronze: #b45309;
+    --bronze-claro: #ffedd5;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     background-color: var(--bg-light);
     color: var(--text-dark);
     line-height: 1.5;
 }
 
 /* ==========================================
-   2. CABEÇALHO (NAV)
+   2. NAV / HEADER COMPARTILHADO
    ========================================== */
 header {
-    background: #BDE3F2;
-    padding: 12px 0;
-    border-bottom: 2px solid #070c6b;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: #ffffff; 
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border); 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     position: sticky;
     top: 0;
     z-index: 1000; 
 }
 
-.nav-container {
+.nav-container, .conteiner-navegacao {
     max-width: 1200px;
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 20px;
+    padding: 0 24px;
 }
 
-.logo-text { 
-    font-size: 1.5rem; 
-    font-weight: bold; 
-    color: #070c6b; 
-    letter-spacing: -1px;
-}
-
-nav ul { list-style: none; display: flex; gap: 25px; }
-nav a { 
-    text-decoration: none; 
+.logo-text, .texto-logo { 
+    font-size: 1.4rem; 
+    font-weight: 800; 
     color: var(--text-dark); 
-    font-weight: 600; 
+    letter-spacing: -0.5px;
+}
+.logo-text span, .texto-logo span { color: var(--primary-blue); }
+
+nav ul { 
+    display: flex !important; 
+    flex-direction: row !important;
+    list-style: none; 
+    gap: 25px; 
+}
+
+nav a {
+    text-decoration: none;
+    font-weight: 600;
     font-size: 0.9rem;
-    transition: 0.2s;
-}
-nav a:hover, nav a.active-link { text-decoration: 0.15rem underline var(--primary-blue); text-underline-offset: 3px; }
-
-/* ============================= 
-    2.1. MENSAGEM  
-================================ */
-   .saudacao{
-    background: linear-gradient(to right, #5ba9d97a, #5ba9d9);
-    color: var(--white);
-    padding: 48px 30px;
-    text-align: center;
-    font-size: 1.2rem;
-    font-weight: bold;
-    padding-left: 35px;
-    max-width: 1150px;
-    flex: 1;
-    border-radius: 25px;
-    margin: 30px auto 30px auto;
-    margin-bottom: 60px;
-}
-
-button.btn-perfil-home {
-    background: transparent;
-    color: white;
-    border: 0.11rem solid var(--bg-light);
-    padding: 11px 19px;
-    border-radius: 12px;
-    font-weight: 300 ;
-    cursor: pointer;
-    transition: 0.3s;
-    font-size: 0.9rem;
-    margin-top: 25px;
-}
-button.btn-perfil-home:hover {
-    background: var(--bg-light);
-    color: var(--primary-blue);
-    border-color: var(--primary-blue);
-}
-.saudacao p{
-    margin-top: 5px;
-    font-weight: 400;
-}
-
-/* ==========================================
-   3. LAYOUT EM COLUNAS (HOME)
-   ========================================== */
-
-.main-content {
-    max-width: 1190px;
-    margin: 20px auto;
-    display: grid;
-    grid-template-columns: 1.8fr 1fr; /* Coluna maior na esquerda */
-    gap: 20px;
-    padding: 0 20px;
-}
-
-/* Layout para páginas de tela cheia (Loja/Ranking Geral) */
-.main-content-single {
-    max-width: 1100px;
-    margin: 20px auto;
-    padding: 0 20px;
-}
-
-.card {
-    background: var(--white);
-    border-radius: 10px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-    padding: 20px; 
-}
-
-/* ==========================================
-   4. SLIDESHOW (TOPO ESQUERDA)
-   ========================================== */
-.slideshow-container {
-    position: relative;
-    height: 320px;
-    padding: 0 !important; /* Remove padding do card para a imagem sangrar */
-    overflow: hidden;
-    width: 100%;
-    margin: auto;
-    margin-bottom: 20px;
-}
-
-.mySlides { display: none; height: 100%; }
-.mySlides img { width: 100%; height: 100%; object-fit: cover; }
-
-.slide-caption {
-    position: absolute; bottom: 0; background: #dfedf8; width: 100%; padding: 15px; font-weight: bold;
-}
-
-.prev, .next {
-    cursor: pointer; position: absolute; top: 50%; padding: 16px;
-    color: white; font-weight: bold; transform: translateY(-50%);
-    text-decoration: none; border-radius: 0 3px 3px 0;
-}
-.next { right: 0; border-radius: 3px 0 0 3px; }
-.prev:hover, .next:hover { background: rgba(0,0,0,0.8); }
-
-/* ==========================================
-   5. SISTEMA DE ABAS E EVENTOS (ESTILO PRINT)
-   ========================================== */
-
-.aba-header {
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 10px;
-    margin-bottom: 15px;
-    display: flex;
-    gap: 15px;
-}
-
-.num { color: #999; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: 0.3s; }
-.num.active { color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); }
-
-.tag-azul { background: var(--primary-blue); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
-.tag-verde { background: var(--success-green); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
-
-.content-box h2 { margin: 12px 0; font-size: 1.5rem; color: #111; }
-.desc { color: var(--text-gray); margin-bottom: 20px; min-height: 50px; }
-.info-footer { font-size: 0.85rem; color: #888; font-weight: 600; border-top: 1px solid #eee; padding-top: 10px; }
-
-/* ==========================================
-    5.1. ACORDEON
-   ========================================== */
-
-.acordeon{
-    width: 100%;
-    margin: auto;
-    background: #fff;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-}
-.acordeon-item {
-    border-bottom: 1px solid #ddd;
-}
-.acordeon-item input {
-    display: none;
-}
-.acordeon-item label {
-    display: block;
-    padding: 20px;
-    background: #5ba9d9;
-    color: var(--white);
-    cursor: pointer;
-    font-weight: 500;
-    transition: background 0.3s;
-}
-.acordeon-item label:hover {
-    background: #4799cc;
-}
-.acordeon-item .content {
-    max-height: 0;
-    overflow: hidden;
-    background: var(--white);
-    padding: 0 15px;
-    transition: max-height 0.4s ease, padding 0.4s ease;
-}
-.acordeon-item input:checked ~ .content {
-    max-height: 300px; 
-    padding: 20px;
-}
-
-
-/* ==========================================
-   6. RANKINGS LATERAIS (DIREITA)
-   ========================================== */
-.ranking-title {
-    color: var(--text-dark);
-    background-color: #BDE3F2;
-    padding: 4px 10px;
-    border-radius: 6px;
-    margin-bottom: 15px;
-    font-size: 1.1rem;
-    font-weight: 800;
     text-transform: uppercase;
-    display: inline-block;
+    color: var(--text-gray);
+    transition: color 0.2s;
+}
+nav a:hover, nav a.active-link, nav a.link-ativo { color: var(--primary-blue) !important; }
+
+/* ==========================================
+   3. CARDS PADRONIZADOS PARA TODO O SITE
+   ========================================== */
+.card, .cartao {
+    background: var(--white);
+    border-radius: var(--raio-grande); 
+    padding: 24px;
+    box-shadow: var(--sombra-media);  
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
 }
 
-.tag-posicao { background:transparent; padding: 4px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; }
-h3{font-weight: 700;}
+/* ==========================================
+   4. ESTRUTURA BASICA DE TABELAS COMPARTILHADAS
+   ========================================== */
+table, .tabela-historico {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
 
-.ranking-list { list-style: none; }
-.ranking-list li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #f1f1f1;
+th, .tabela-historico th {
+    color: var(--text-gray);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    border-bottom: 2px solid var(--border);
+    padding: 14px 16px;
+    text-align: left;
+}
+
+td, .tabela-historico td {
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    color: var(--text-dark);
     font-size: 0.95rem;
 }
 
-.badge-coin {
-    background: #fff3cd;
-    color: #856404;
-    padding: 3px 10px;
-    border-radius: 6px;
-    font-weight: bold;
-    font-size: 0.8rem;
-    border: 1px solid #ffeeba;
-}
+tr:hover { background-color: #f1f5f9; }
 
-.btn-ranking {
-    width: 100%;
-    margin-top: 15px;
-    background: var(--primary-blue);
-    color: white;
-    border: none;
-    padding: 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.3s;
-}
-.btn-ranking:hover { background: var(--primary-dark); }
+footer { text-align: center; padding: 40px; color: var(--text-gray); font-size: 0.8rem; clear: both; display: block; width: 100%; }
 
-.turma-card{
-    display: flex;
-    gap: calc(50% - 90px);
-    padding: 10px;
-    border-bottom: 1px solid var(--border);
-}
-
+.valor-eco, .valor-positivo { font-weight: 700; color: #16a34a; }
+.valor-negativo { font-weight: 700; color: #dc2626; }
+.tag-azul { background: var(--primary-blue); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; display: inline-block; }
 
 /* ==========================================
-   7. LOJA (GRID DE PRODUTOS)
+   5. CONFIGURAÇÃO EXCLUSIVA DO LOGIN
    ========================================== */
-.produtos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 20px;
-}
-
-.item-loja-card { text-align: center; transition: 0.3s; }
-.item-loja-card:hover { transform: translateY(-5px); }
-
-.item-loja-card img { width: 100%; border-radius: 8px; margin-bottom: 15px; }
-
-.preco-tag {
-    display: block;
-    font-size: 1.3rem;
-    font-weight: bold;
-    color: var(--success-green);
-    margin: 10px 0;
-}
-
-.btn-loja-home{
-    padding: 10px;
-    border-radius: 8px;
-    background-color: var(--primary-blue);
-    color: white;
-    transition: 0.3s;
-    border: none;
-    cursor: pointer;
-    font-weight: bold;
-    width: 20%;
-}
-.btn-loja-home:hover { background: var(--primary-dark); }
-
+.acesso { position: absolute; left: 12vw; top: 14vh; }
+.acesso h1 { color: var(--primary-dark); text-align: center; }
+#nova_conta { display: none; }
+.area-cadastro { padding: 30px; background-color: #3492d6b4; text-align: center; border-radius: 22px; width: 380px; margin-top: 15px; }
+.area-cadastro button, .area-cadastro input, .btn-entrar { background-color: var(--white); color: var(--text-gray); padding: 12px; border: none; border-radius: 22px; width: 100%; cursor: pointer; }
+input[type="submit"] { color: var(--white); background-color: var(--primary-blue); }
+.area-cadastro li { list-style: none; margin-top: 10px; }
 
 /* ==========================================
-   8. TABELAS (RANKING GERAL)
+   6. LAYOUT E CORREÇÕES DAS PÁGINAS SINGLE (Ranking / Perfil)
    ========================================== */
-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border); }
-th { background: #bde3f271; color: var(--primary-blue); border-radius: 6px; font-weight: bold; }
-tr:hover { background: #f9f9f9; }
-
-
-/* ==========================================
-   9. PERFIL
-   ========================================== */
-.perfil-header{ width: 100%; background-image: linear-gradient(to right, #dfedf8, #bde2f5);}
-
-.perfil-header { display: flex; align-items: center; gap: 20px; padding: 25px; }
-.perfil-avatar { width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--primary-blue); }
-
-/* ---------------------------
-    9.1. CONQUISTAS
--------------------------------*/
-
-.conquistas-grid{
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
-    margin: 30px auto;
-    gap: 65px;
+.main-content-single, .conteiner-ranking {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 24px !important; 
 }
-.conquista-item{
-    text-align: center;
-    padding: 12px 18px 16px 18px;
-    background-color: #a5d8ec;
-    border-radius: 15%;
-    width: 160px;
-    box-shadow: 0 3px 4px rgba(32, 43, 43, 0.342);
-}
-.conquista-item h4{margin-top:5px; font-weight: 700; font-size: 1.1rem;}
-.badge-icon{font-size: 40px;}
-.conquista-item p{
-    line-height: 15px;
-    font-size: 13px;
-    font-weight: 500;
-    color: #1c1e21d0;
-}
-.bloqueada{opacity: 0;}
 
-.btn-full-width{
-    padding: 10px;
-    border-radius: 6px;
-    color: var(--text-dark);
-    font-size: 15px;
+/* Alinhamento Horizontal do Topo do Perfil */
+.perfil-header {
+    display: flex !important;
+    flex-direction: row !important; 
+    align-items: center !important;
+    gap: 24px !important;
+    text-align: left !important;
+    padding: 24px;
     background: var(--white);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-    border: none;
-    font-weight: 600;
-    width: 150px;
-}
-.btn-full-width:hover{
-    background-color: rgb(255, 195, 195);
-    cursor: pointer;
 }
 
-
-/* ==========================================
-   10. RESPONSIVIDADE
-   ========================================== */
-@media (max-width: 850px) {
-    .main-content { grid-template-columns: 1fr; }
-    .col-direita { order: -1; } /* Ranking sobe no mobile */
-    .slideshow-container { height: 200px; }
+.perfil-avatar {
+    width: 110px !important;
+    height: 110px !important;
+    min-width: 110px;
+    border-radius: 50% !important;
+    border: 3px solid var(--primary-blue);
+    overflow: hidden;
+    margin: 0 !important;
 }
 
+.perfil-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.perfil-info { display: flex; flex-direction: column; justify-content: center; }
+.perfil-info h1 { font-size: 1.5rem; font-weight: 800; color: var(--text-dark); }
 
-/* ==========================================
-   11. LOGIN
-   ========================================== */
-
-.acesso{
-    position: absolute;
-    left: 12vw;
-    top: 14vh;
-}
-.acesso h1{
-    color: #070c6b;
-    text-align: center;
-}
-
-#nova_conta {
-    display: none;
-}
-
-.area-cadastro{
-    padding: 30px;
-    justify-content: center;
-    background-color: #3492d6b4;
-    text-align: center;
-    border: none;
-    border-radius: 22px;
-    width: 380px;
+/* Ajuste do grid de conquistas do perfil */
+.conquistas-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    gap: 16px;
     margin-top: 15px;
-    box-shadow: 0 2px 3px rgba(0,0,0,0.1);
 }
 
-button, input, .btn-entrar{
-    background-color: var(--white);
-    color: var(--text-gray);
-    padding: 12px; 
-    border: none;
-    border-radius: 22px;
-    width: 100%;
-    cursor: pointer;
+.conquista-item {
+    flex: 1;
+    min-width: 140px;
+    background: var(--bg-light);
+    border: 1px solid var(--border);
+    border-radius: var(--raio-medio);
+    padding: 16px;
+    text-align: center;
 }
 
-input[type="submit"]{
-    color: var(--white); 
-    text-align: center; 
-    background-color: var(--primary-blue);
+/* ==========================================
+   7. CORE VISUAL: RESUMO POR TURMA DA HOME (PÁGINA INICIAL)
+   ========================================== */
+.conteiner-painel {
+    max-width: 1200px;
+    margin: 32px auto;
+    display: grid;
+    grid-template-columns: 1.8fr 1fr;
+    gap: 32px;
+    padding: 0 24px;
+    align-items: start;
 }
 
-li{
-    list-style: none;
+.conteiner-grafico-ranking {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
     margin-top: 10px;
+}
+
+/* Linha gráfica adaptada para formato horizontal sutil */
+.linha-grafico {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    background-color: var(--bg-light) !important;
+    border: 1px solid var(--border) !important;
+    padding: 12px 14px !important;
+    border-radius: var(--raio-medio) !important;
+}
+
+.info-grafico {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
+.info-grafico span { font-size: 0.95rem; font-weight: 700; color: var(--text-dark); }
+.info-grafico strong {
+    font-size: 0.85rem;
+    font-weight: 700;
+    background-color: #e2e8f0;
+    color: #475569;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.fundo-barra-grafico { width: 100% !important; height: 6px !important; background-color: var(--border) !important; border-radius: 10px !important; overflow: hidden !important; }
+.barra-grafico { height: 100% !important; border-radius: 10px !important; }
+.barra-ouro { background-color: var(--ouro) !important; }
+.barra-prata { background-color: var(--prata) !important; }
+.barra-bronze { background-color: var(--bronze) !important; }
+
+.widget-ranking .botao-texto {
+    width: 100% !important;
+    margin-top: 12px !important;
+    padding: 10px 14px !important;
+    background-color: var(--primary-blue) !important;
+    color: white !important;
+    border-radius: var(--raio-medio) !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem;
+    border: none !important;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-align: center;
+}
+.widget-ranking .botao-texto:hover { background-color: var(--primary-dark) !important; }
+
+/* ==========================================
+   8. CORE VISUAL: RESUMO POR TURMA DA PÁGINA DE RANKING (RANKING.HTML)
+   ========================================== */
+
+/* Força os cards ficarem um ao lado do outro na horizontal */
+.main-content-single .turmas-ranking-grid {
+    display: flex !important;
+    flex-direction: row !important; 
+    flex-wrap: wrap !important;
+    gap: 16px !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+}
+
+/* Transforma cada elemento de turma do ranking em um card vertical perfeito */
+.main-content-single .turma-card {
+    flex: 1 !important;
+    min-width: 160px !important;
+    background-color: var(--white) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--raio-medio) !important;
+    padding: 20px 16px !important;
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important; 
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    margin: 0 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+/* Formata o selo de classificação interna (ex: 1º Lugar) */
+.main-content-single .turma-card .tag-azul {
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    padding: 4px 12px !important;
+    border-radius: 20px !important;
+    display: inline-block !important;
+    width: auto !important;
+    color: #1e293b !important;
+}
+
+/* Bordas coloridas temáticas para o ranking de turmas */
+.main-content-single .gold-border { border: 2px solid var(--ouro) !important; background-color: var(--ouro-claro) !important; }
+.main-content-single .silver-border { border: 2px solid var(--prata) !important; background-color: var(--prata-claro) !important; }
+.main-content-single .bronze-border { border: 2px solid var(--bronze) !important; background-color: var(--bronze-claro) !important; }
+
+.main-content-single .turma-card h3 {
+    font-size: 1.3rem !important;
+    font-weight: 800 !important;
+    color: var(--text-dark) !important;
+    margin: 0 !important;
+}
+
+.main-content-single .turma-card .valor-eco {
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    background-color: var(--white) !important;
+    color: #475569 !important;
+    padding: 4px 14px !important;
+    border-radius: 20px !important;
+    display: inline-block !important;
+    margin: 0 !important;
+    border: 1px solid var(--border) !important;
+}
+.footer-container {
+    text-align: center;
+    padding: 30px;
+    border-top: 2px solid var(--primary-blue); /* Ajuste para a sua cor principal */
+    margin-top: 40px;
+    color: var(--text-gray);
+}
+
+.link-instagram {
+    text-decoration: none;
+    color: #E1306C; /* Cor oficial do Instagram */
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: 0.3s;
+}
+
+.link-instagram:hover {
+    opacity: 0.8;
+    text-decoration: underline;
 }

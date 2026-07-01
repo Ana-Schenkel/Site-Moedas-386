@@ -24,14 +24,26 @@
         <h1 id="titulo">Acesse sua conta</h1>
         
         <section class="area-cadastro">
-            <div id="login" class="cadastrar" style="margin-top: 20px; border-bottom: 1px solid rgb(255, 255, 255); padding-bottom: 20px; ">
-                <ul>
-                    <li><input type="email" id="email_login" placeholder="E-mail" required></li>
-                    <li><input type="password" id="senha_login" placeholder="Senha" required></li>
-                    <li><input type="submit" id="btn_entrar" class="btn-entrar"value="Entrar"></li>
-                    <li><input type="submit" id="esqueci_senha" class="btn-entrar" value="Esqueceu a senha?"></li>
-                </ul>
-            </div>
+            <div style="text-align: center; margin-top: 15px;">
+    <a href="https://wa.me/SEUNUMERO?text=Olá,%20preciso%20de%20ajuda%20para%20recuperar%20minha%20senha%20do%20EcoCoin" 
+       target="_blank" 
+       style="color: var(--text-gray); font-size: 0.8rem; text-decoration: underline;">
+       Esqueceu a senha? Fale com um monitor
+    </a>
+</div>
+            <div id="login" class="cadastrar" style="margin-top: 20px; border-bottom: 1px solid rgb(255, 255, 255); padding-bottom: 20px;">
+    <ul>
+        <li><input type="email" id="email_login" placeholder="E-mail" required></li>
+        <li><input type="password" id="senha_login" placeholder="Senha" required></li>
+        <li><input type="submit" id="btn_entrar" class="btn-entrar" value="Entrar"></li>
+        
+        <li style="margin-top: 10px; text-align: center;">
+            <a href="recuperar.html" style="color: white; font-size: 0.9rem; text-decoration: underline;">
+                Esqueci minha senha
+            </a>
+        </li>
+    </ul>
+</div>
             <div id="nova_conta" class="cadastrar" style="margin-top: 20px; border-bottom: 1px solid rgb(255, 255, 255); padding-bottom: 20px; ">
                 <ul>
                     <li><input type="text" id="nome_cadastro" placeholder="Nome Completo" required></li>
@@ -49,6 +61,7 @@
                     <li><button id="btn_conta" class="btn-entrar" style="background-color: var(--primary-dark); color: white;">Não tenho conta</button></li> <!-- colocar como opção login por meio do facebook -->
                 </ul>
             </div>
+            
         </section>
     </div>
 
