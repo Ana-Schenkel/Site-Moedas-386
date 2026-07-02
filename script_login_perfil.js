@@ -1,67 +1,223 @@
 // ==========================================
-// CONFIGURAÇÕES
+// 1. CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
 // ==========================================
-const API_URL_login = "https://script.google.com/macros/s/AKfycbzFgqH9ZoG2sPvcH_CHp8xVosVDSe6BiI93DjBLEQSvOI2E8naH7I8xV-X0Km_jOzJA/exec"; 
-const API_URL_perfil = "https://script.google.com/macros/s/AKfycbyr35zQWckx2M17VxIcffnu01L4Aw682CpP8BSCwAoptlWS0nahNAzik07LbWl8VbY/exec";
+const alunoLogado = Number(sessionStorage.getItem("alunoLogado"));
 
+const API_URL_perfil = "https://script.google.com/macros/s/AKfycby2Rb7zzG23sCtFLuUIkbXFn_q2gE4LvITZiTqKQ910p6mqTKRogZhd8gWVF4wx5Ns/exec"; 
+let dadosAlunosPerfil = [];
+
+const API_URL_login = "https://script.google.com/macros/s/AKfycbygZslTMNAen4nJ5QyUIKivrHULl7DQzPjAYXKfHuc_KfeqoDE19jYxvJiOHtY0u8dm/exec";
 let dadosAlunosLogin = [];
 
 // ==========================================
-// INICIALIZADOR ÚNICO (Ouvinte de carregamento)
+// 2. INICIALIZAÇÃO DO SITE
 // ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
-    const bodyId = document.body.id;
-    
-    if (bodyId === "pagina_login") {
-        await carregarPlanilhaLogin();
-        document.getElementById("btn_entrar").addEventListener("click", (e) => { e.preventDefault(); verificarLogin(); });
-    } 
-    else if (bodyId === "pagina_perfil") {
-        const matricula = sessionStorage.getItem("alunoLogado");
-        if (!matricula) window.location.href = 'login.html';
-        else await carregarPerfilAluno(matricula);
-    }
-    else if (bodyId === "pagina_recuperar") {
-        document.getElementById("btn_redefinir").addEventListener("click", (e) => { e.preventDefault(); verificarERedefinir(); });
-    }
+    await inicializarPerfil();
 });
 
-// ==========================================
-// FUNÇÕES DE LÓGICA
-// ==========================================
-async function carregarPlanilhaLogin() {
-    const res = await fetch(API_URL_login + "?aba=Dados Gerais");
-    dadosAlunosLogin = await res.json();
+async function inicializarPerfil() {
+
+    const pagina = document.body.id;
+
+    // Se não houver ninguém logado, vai para o login
+    if (!alunoLogado) {
+        if (pagina === "pagina_perfil") {
+            alert("Por favor, faça login primeiro!");
+            window.location.href = 'login.html';
+        } else {
+            await carregarPlanilhaLogin();
+            await inicializarLogin();
+        }
+    // Se houver alguém logado, carrega os dados do perfil
+    } else {
+        const aluno = await carregarPerfilAluno(alunoLogado);
+    }
+    
 }
 
-async function verificarLogin() {
+// ==========================================
+// 3. CONEXÃO COM GOOGLE SHEETS
+// ==========================================
+async function carregarPlanilhaLogin() {
+    try {
+        const resposta = await fetch(API_URL_login + "?aba=Dados Gerais");
+        dadosAlunosLogin = await resposta.json();
+    } catch (erro) {
+        console.error("Erro ao carregar planilha:", erro);
+        // Fallback: se a planilha falhar, tenta usar o que está no cache
+        const cache = localStorage.getItem('dadosAlunosCache');
+        if (cache) dadosAlunosLogin = JSON.parse(cache);
+    }
+}
+
+async function carregarPlanilhaPerfil() {
+    try {
+        const resposta = await fetch(API_URL_perfil + "?aba=Dados Gerais");
+        dadosAlunosPerfil = await resposta.json();
+    } catch (erro) {
+        console.error("Erro ao carregar planilha:", erro);
+        // Fallback: se a planilha falhar, tenta usar o que está no cache
+        const cache = localStorage.getItem('dadosAlunosCache');
+        if (cache) dadosAlunosPerfil = JSON.parse(cache);
+    }
+}
+
+// ==========================================
+// 4. CONFIGURAÇÕES DE LOGIN E CADASTRO
+// ==========================================
+async function inicializarLogin() {
+    
+    const botao_conta = document.getElementById("btn_conta");
+    const botao_entrar = document.getElementById("btn_entrar");
+    const botao_cadastrar = document.getElementById("btn_cadastrar");
+
+    botao_conta.addEventListener("click", () => {trocaPaginaCadastro();});
+    botao_entrar.addEventListener("click", () => {fazerLogin();});
+    botao_cadastrar.addEventListener("click", () => {fazerCadastro();});
+}
+
+async function trocaPaginaCadastro() {
+    
+    const titulo = document.getElementById("titulo");
+    const botao_conta = document.getElementById("btn_conta");
+    const login = document.getElementById("login");
+    const novaConta = document.getElementById("nova_conta");
+    // Alterna a visibilidade do login e do cadastro
+    if (login.style.display !== "none") {
+        // Esconde o login e mostra o cadastro
+        login.style.display = "none";
+        novaConta.style.display = "block";
+        botao_conta.textContent = "Já tenho conta";
+        titulo.textContent = "Nova conta";
+    } else {
+        // Esconde o cadastro e mostra o login
+        login.style.display = "block";
+        novaConta.style.display = "none";
+        botao_conta.textContent = "Não tenho conta";
+        titulo.textContent = "Acesse sua conta";
+    }
+}
+
+// ============================================================
+// 5. FUNÇÕES DE LOGIN E CADASTRO (VALIDAÇÃO E ENVIO DE DADOS)
+// ============================================================
+async function fazerLogin() {
+
     const email = document.getElementById("email_login").value.trim().toLowerCase();
     const senha = document.getElementById("senha_login").value.trim();
 
     for (let i = 1; i < dadosAlunosLogin.length; i++) {
-        if (String(dadosAlunosLogin[i][3]).trim().toLowerCase() === email && String(dadosAlunosLogin[i][4]).trim() === senha) {
-            sessionStorage.setItem("alunoLogado", dadosAlunosLogin[i][0]);
-            window.location.href = 'perfil.html';
+
+        const emailPlanilha = String(dadosAlunosLogin[i][3]).trim().toLowerCase();
+        const senhaPlanilha = String(dadosAlunosLogin[i][4]).trim();
+
+        if (emailPlanilha === email && senhaPlanilha === senha) {
+            // Salva os dados do usuário logado no sessionStorage
+            sessionStorage.setItem("alunoLogado", dadosAlunosLogin[i][0]); // Supondo que a matrícula esteja na primeira coluna
+            alert("Login bem-sucedido!");
+            window.location.href = 'perfil.html'; // Redireciona para a página de perfil
             return;
         }
     }
-    alert("E-mail ou senha incorretos.");
+    alert("E-mail ou senha incorretos. Tente novamente.");
 }
 
-async function carregarPerfilAluno(matricula) {
-    const res = await fetch(API_URL_perfil + "?aba=" + matricula);
-    const d = await res.json();
+async function fazerCadastro() {
 
-    document.getElementById("nomeAluno").innerText = d[1][0];
-    document.getElementById("matriculaAluno").innerText = d[1][1];
-    document.getElementById("turmaAluno").innerText = d[1][2] || "N/A";
-    document.getElementById("saldoAluno").innerText = `🪙 ${d[5][1]} EcoCoins`;
+    const nome = document.getElementById("nome_cadastro").value.trim();
+    const matricula = document.getElementById("matricula_cadastro").value.trim();
+    const turma = document.getElementById("turma_cadastro").value.trim();
+    const email = document.getElementById("email_cadastro").value.trim().toLowerCase();
+    const senha = document.getElementById("senha_cadastro").value.trim();
+    const confSenha = document.getElementById("confsenha").value.trim();
 
-    const tbody = document.getElementById("atividadesAluno");
-    tbody.innerHTML = "";
-    for (let i = 7; i < d.length; i++) {
-        if (d[i][1]) {
-            tbody.innerHTML += `<tr><td>${d[i][1]}</td><td>${new Date(d[i][0]).toLocaleDateString()}</td><td>${d[i][3]}</td></tr>`;
+    if (senha !== confSenha) {
+        alert("As senhas não coincidem! Por favor, tente novamente.");
+        return;
+    }
+    
+    for (let i = 1; i < dadosAlunosLogin.length; i++) {
+        const emailPlanilha = String(dadosAlunosLogin[i][3]).trim().toLowerCase();
+        if (emailPlanilha === email) {
+            alert("E-mail já cadastrado! Por favor, use outro e-mail.");
+            return;
+        }
+        const matriculaPlanilha = String(dadosAlunosLogin[i][0]).trim();
+        if (matriculaPlanilha === matricula) {
+            alert("Matrícula já cadastrada! Por favor, verifique os dados com a secretaria.");
+            return;
         }
     }
+
+    // Envia os dados para a planilha de login
+    await fetch(API_URL_login, {
+        method: "POST",
+        body: JSON.stringify({
+            nome: nome,
+            matricula: matricula,
+            turma: turma,
+            email: email,
+            senha: senha
+        })
+    });
+    // Cria uma nova aba para o perfil do aluno na planilha de perfil
+    await carregarPlanilhaPerfil();
+    await fetch(API_URL_perfil, {
+        method: "POST",
+        body: JSON.stringify({
+            nome: nome,
+            matricula: matricula,
+            turma: turma
+        })
+    });
+
+    alert("Cadastro realizado! Você será redirecionado para a página de login. Aguarde alguns minutos para que os dados sejam sincronizados. Recarregue a página de login se necessário.");
+    trocaPaginaCadastro();
+}
+
+// ===============================================
+// 6. CARREGAMENTO DE DADOS DO PERFIL DO ALUNO
+// ===============================================
+function formatarData(dataJSON) {
+    const data = new Date(dataJSON);
+    let texto = data.toLocaleDateString("pt-BR", {
+        weekday: "long",
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit"
+    });
+    return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+async function carregarPerfilAluno(nomeAba_matricula) {
+
+    const resposta = await fetch(API_URL_perfil + "?aba=" + nomeAba_matricula);
+
+    dadosAluno = await resposta.json();
+
+    document.getElementById("nomeAluno").innerHTML = dadosAluno[1][0]; // Nome do aluno
+    document.getElementById("turmaAluno").innerHTML = dadosAluno[1][1]; // Turma do aluno
+    document.getElementById("matriculaAluno").innerHTML = dadosAluno[1][2]; // Matrícula do aluno
+    document.getElementById("saldoAluno").innerHTML = `🪙 ${dadosAluno[5][1].toFixed(2)} EcoCoins`; // Saldo do aluno
+    
+    const tbody = document.getElementById("atividadesAluno"); // Corpo da tabela de atividades
+    tbody.innerHTML = ""; // Limpa a tabela caso já tenha dados
+
+    // Começa em 7 para ignorar os dados iniciais do aluno (nome, turma, matrícula, etc.) e pegar apenas as atividades
+    for (let i = 7; i < dadosAluno.length; i++) {
+
+        const data = formatarData(dadosAluno[i][0]); // coluna A
+        const atividade = dadosAluno[i][1]; // coluna B
+        const valor = dadosAluno[i][3];     // coluna D
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${atividade}</td>
+            <td>${data}</td>
+            <td>${valor > 0 ? "+" : ""}${valor}</td>
+        `;
+        tbody.appendChild(tr);
+    }
+    return await dadosAluno;
 }

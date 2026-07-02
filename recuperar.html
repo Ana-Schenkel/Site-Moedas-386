@@ -4,21 +4,39 @@
     <meta charset="UTF-8">
     <title>Redefinir Senha - EcoCoin</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        body{
+            background-image: url('Imagens/fundo12.svg');;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh;
+        }
+    </style> 
 </head>
-<body style="background: url('Imagens/fundo12.svg') no-repeat center center fixed; background-size: cover; height: 100vh; display: flex; justify-content: center; align-items: center;">
 
-    <section class="area-cadastro" style="width: 350px;">
-        <h1 style="color: white; font-size: 1.5rem; margin-bottom: 20px;">Redefinir Senha</h1>
-        <ul style="list-style: none;">
-            <li><input type="number" id="rec_matricula" placeholder="Matrícula" required></li>
-            <li><input type="email" id="rec_email" placeholder="E-mail cadastrado" required></li>
-            <li><input type="password" id="nova_senha" placeholder="Nova Senha" required></li>
-            <li><button onclick="verificarERedefinir()" class="btn-entrar" style="background: white; color: var(--primary-blue);">Redefinir Senha</button></li>
-            <li style="margin-top: 15px;">
-                <a href="login.html" style="color: white; font-size: 0.8rem; text-decoration: underline;">Voltar ao Login</a>
-            </li>
-        </ul>
-    </section>
+<body>
+
+    <div class="logo-text" style="margin:12px 30px;">386 <span style="color: #0056b3;">EcoCoin</span></div>
+    
+    <div class="acesso">
+        <h1 id="titulo">Redefinir Senha</h1>
+
+        <section class="area-cadastro">
+            <!-- <h1 style="color: white; font-size: 1.5rem; margin-bottom: 20px;">Redefinir Senha</h1> -->
+            <div class="cadastrar" style="margin-top: 20px; border-bottom: 1px solid rgb(255, 255, 255); padding-bottom: 20px; ">
+            <ul>
+                <li><input type="number" id="rec_matricula" placeholder="Matrícula" required></li>
+                <li><input type="email" id="rec_email" placeholder="E-mail cadastrado" required></li>
+                <li><input type="password" id="nova_senha" placeholder="Nova Senha" required></li>
+                <li><input type="submit" onclick="verificarERedefinir()" class="btn-entrar" value="Redefinir Senha"></li>
+                <li style="margin-top: 15px;">
+                    <a href="login.html" style="color: white; font-size: 0.8rem; text-decoration: underline;">Voltar ao Login</a>
+                </li>
+            </ul>
+            </div>
+        </section>
+    </div>
 
     <script src="script_login_perfil.js"></script>
 </body>
