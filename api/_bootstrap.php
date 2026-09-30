@@ -1,0 +1,491 @@
+<?php
+declare(strict_types=1);
+
+const PRIVATE_DIR = __DIR__ . '/../.private';
+const USERS_CSV = PRIVATE_DIR . '/usuarios.csv';
+const ACTIVITIES_CSV = PRIVATE_DIR . '/atividades.csv';
+const ORDERS_CSV = PRIVATE_DIR . '/pedidos_loja.csv';
+const ITEMS_CSV = PRIVATE_DIR . '/itens_loja.csv';
+const CARROSSEL_CSV = PRIVATE_DIR . '/carrossel.csv';
+const EVENTOS_CSV = PRIVATE_DIR . '/eventos.csv';
+const PROJETOS_CSV = PRIVATE_DIR . '/projetos.csv';
+const TURMAS_HISTORICO_CSV = PRIVATE_DIR . '/turmas_historico.csv';
+const USER_LOG_CSV = PRIVATE_DIR . '/log_usuarios.csv';
+const RATE_LIMIT_FILE = PRIVATE_DIR . '/rate_limit.json';
+
+const CSV_HEADERS = [
+    // reset_token: 6 caracteres A-Z0-9, gerado no cadastro, guardado em
+    // texto puro de propósito — é para um monitor conseguir ler e ajudar o
+    // aluno a recuperar a senha, não é segredo criptográfico.
+    // ativo: só importa quando EXIGIR_APROVACAO_CONTA está ligado em
+    // config.php; veja conta_esta_ativa().
+    // cpf/telefone: contato pedido no cadastro conforme CPF_MODO/
+    // TELEFONE_MODO em config.php; ficam vazios se o modo for 'oculto', se
+    // o campo for opcional e deixado em branco, ou em contas criadas
+    // antes destas colunas existirem.
+    // Não existe mais uma coluna "turma" aqui — a turma (atual e todo o
+    // histórico de trocas) vive inteiramente em turmas_historico.csv desde
+    // que a troca de turma pelo aluno foi adicionada; veja o comentário de
+    // 'turmas_historico' logo abaixo e api/turma_utils.php. O cadastro cria
+    // a primeira linha de lá junto com o usuário (auth.php).
+    'usuarios' => ['matricula', 'nome', 'email', 'cpf', 'telefone', 'senha_hash', 'reset_token', 'ativo'],
+    // Créditos e ajustes de saldo (valor pode ser negativo). Não existe mais
+    // um "saldo" gravado em algum CSV: ganho/gasto/saldo de cada aluno são
+    // sempre calculados na hora a partir deste arquivo + pedidos_loja.csv —
+    // veja calcular_resumo_financeiro(). Isso evita saldo e histórico
+    // ficarem dessincronizados por uma edição manual de um só lado.
+    // "id" identifica a linha (usado pelo painel admin pra editar/remover
+    // uma atividade específica). "matriculas" aceita mais de uma matrícula
+    // na mesma linha, separadas por ";" (nunca vírgula — colidiria com o
+    // separador do próprio CSV): uma atividade dada pra turma inteira
+    // ("Boas notas", por exemplo) pode ser uma linha só em vez de uma linha
+    // por aluno. Veja matriculas_da_linha().
+    'atividades' => ['id', 'matriculas', 'data', 'atividade', 'valor'],
+    // item_id referencia itens_loja.csv; item/valor ficam "congelados" (uma
+    // cópia do nome e do preço no momento da compra), para que o histórico
+    // de pedidos não mude se o catálogo for editado depois.
+    // status "Cancelado" é o único que não entra na conta de gasto — ou
+    // seja, cancelar um pedido "devolve" o valor automaticamente, sem
+    // nenhuma transação de estorno separada.
+    'pedidos'  => ['id', 'data', 'matricula', 'nomeAluno', 'item_id', 'item', 'valor', 'status'],
+    // icone: um emoji/texto curto mostrado se não houver imagem.
+    // imagem: URL de uma foto (png/jpg/etc); se preenchida, tem prioridade sobre o ícone.
+    // ativo = "1" aparece na loja; "0" fica desativado (não aparece para
+    // compra) mas continua no arquivo — necessário para o histórico de
+    // pedidos antigos continuar fazendo sentido. O painel admin decide, ao
+    // "remover" um item, entre desativar (ativo=0) ou apagar de vez a
+    // linha — apagar só é permitido se não houver nenhum pedido referenciando o id.
+    'itens'    => ['id', 'nome', 'valor', 'icone', 'imagem', 'ativo'],
+    // Conteúdo editorial da página inicial (carrossel, eventos, projetos em
+    // destaque), editável pelo painel admin em /admin/conteudo.html.
+    // "ordem" controla a posição de exibição (menor primeiro).
+    'carrossel' => ['id', 'imagem', 'legenda', 'ordem', 'ativo'],
+    'eventos' => ['id', 'tag', 'titulo', 'descricao', 'rodape', 'link', 'ordem', 'ativo'],
+    'projetos' => ['id', 'titulo', 'parceria', 'descricao', 'ordem', 'ativo'],
+    // Uma linha por associação aluno/turma/ano — um aluno acumula uma linha
+    // nova a cada troca (nunca edita/apaga uma linha antiga), pra manter o
+    // histórico completo de turmas por que ele já passou. Formato completo
+    // (o que cada coluna significa, quando "aprovado" é exigido, etc.) no
+    // topo de api/turma_utils.php e na seção "Troca de turma" do README.
+    'turmas_historico' => ['id', 'matricula', 'turma', 'ano', 'data_solicitacao', 'data_efetiva', 'retroativo_definido', 'aprovacao_forcada', 'aprovado'],
+    // Log das ações dos alunos (login, troca de dados, resgates...), só de
+    // escrita aqui — quem lê é o painel admin (admin/api/log_usuarios.php),
+    // e só admin. Uma linha por ação, nunca editada nem apagada. "nome" é
+    // uma cópia do nome no momento da ação (o log continua legível mesmo
+    // que a conta mude depois). Veja registrar_log_usuario().
+    'log_usuarios' => ['data', 'matricula', 'nome', 'acao', 'detalhes', 'ip'],
+];
+
+require __DIR__ . '/config.php';
+require __DIR__ . '/csv_utils.php';
+require __DIR__ . '/turma_utils.php';
+require __DIR__ . '/financeiro_utils.php';
+
+// Sem isto, o PHP aceita um ID de sessão que o navegador mandou mesmo que
+// esse ID não exista mais no servidor (ex.: logo depois de um logout) — e
+// simplesmente cria um arquivo novo, vazio, com aquele mesmo ID de volta.
+// É provavelmente por isso que um arquivo de sessão pode parecer "esvaziado
+// em vez de apagado": o session_destroy() do logout.php realmente apaga o
+// arquivo, mas alguma outra aba/requisição que ainda tinha o cookie antigo
+// guardado acaba recriando um arquivo vazio com o mesmo nome logo em
+// seguida. "Strict mode" também é uma boa prática de segurança à parte
+// (evita ataques de session fixation, onde alguém força a vítima a usar um
+// ID de sessão escolhido por ele).
+ini_set('session.use_strict_mode', '1');
+
+session_name('ecocoin_session');
+
+// Sessões deste site ficam numa pasta própria dentro de .private/ (que já
+// tem .htaccess bloqueando acesso via navegador), em vez da pasta de sessão
+// compartilhada padrão do servidor. Isso evita de vez qualquer conflito de
+// nome de arquivo com outros sites que usem essa mesma pasta compartilhada
+// — este site nem chega a guardar nada lá. A pasta é criada na hora se
+// ainda não existir, então não depende de nenhum provisionamento manual: o
+// próprio PHP cuida disso no primeiro request.
+const SESSIONS_DIR = PRIVATE_DIR . '/sessoes';
+if (!is_dir(SESSIONS_DIR)) {
+    @mkdir(SESSIONS_DIR, 0700, true);
+}
+if (is_dir(SESSIONS_DIR) && is_writable(SESSIONS_DIR)) {
+    session_save_path(SESSIONS_DIR);
+} else {
+    error_log('Não foi possível usar ' . SESSIONS_DIR . ' para sessões (verifique permissões de .private/) — usando o local padrão do servidor.');
+}
+
+// Por padrão o PHP manda Cache-Control/Expires/Pragma próprios junto do
+// cookie de sessão (o "limitador nocache") — inclusive um Expires no
+// passado (1981), que polui QUALQUER resposta, mesmo as públicas, e
+// convence o navegador a nunca guardar nem revalidar nada (fica sempre
+// 200, nunca manda If-None-Match de volta). Desligamos isso aqui porque
+// cada endpoint já define seus próprios cabeçalhos de cache explicitamente
+// (json_response() manda no-store; responder_com_cache() manda ETag +
+// no-cache) — não precisamos que o PHP decida isso por conta própria.
+session_cache_limiter('');
+session_set_cookie_params([
+    // Sem duração configurada (LOGIN_DURACAO_ATIVADA=false), o cookie dura
+    // até o navegador fechar (0 = "cookie de sessão"), como antes. Com a
+    // duração ligada, o cookie já nasce com esse teto — a checagem de
+    // verdade (que renova o prazo a cada uso) é feita no servidor por
+    // aplicar_expiracao_login(), isto aqui é só um teto adicional pra não
+    // deixar o cookie sobrevivendo no navegador além do que faz sentido.
+    'lifetime' => LOGIN_DURACAO_ATIVADA ? LOGIN_DURACAO_SEGUNDOS : 0,
+    'path' => '/',
+    'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+                (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower(trim(explode(',', $_SERVER['HTTP_X_FORWARDED_PROTO'])[0])) === 'https'),
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
+
+/**
+ * Só inicia a sessão PHP quando faz sentido — um visitante anônimo nas
+ * páginas públicas (ranking, config), ou mesmo alguém checando "estou
+ * logado?" em perfil.html sem nunca ter feito login, nunca chega a ganhar
+ * um arquivo de sessão no servidor:
+ *   - $forcar = true força o início mesmo sem cookie (usado só no momento
+ *     em que o login dá certo, quando realmente precisamos criar uma
+ *     sessão nova pra esse visitante que talvez nunca tenha tido uma);
+ *   - sem $forcar, só retoma uma sessão se o navegador já mandou um cookie
+ *     que PAREÇA um ID de sessão válido E o arquivo correspondente já
+ *     existir em disco. Isso é de propósito mais rígido do que só checar
+ *     `isset($_COOKIE[...])`: chamar session_start() com qualquer cookie
+ *     (mesmo um velho/inválido) faz o PHP criar um arquivo novo na hora,
+ *     mesmo que a sessão resultante fique vazia — então só vale a pena
+ *     chamar session_start() quando já sabemos, sem criar nada, que existe
+ *     mesmo uma sessão pra retomar.
+ */
+function sessao_iniciar_se_necessario(bool $forcar = false): void {
+    if (session_status() === PHP_SESSION_ACTIVE) return;
+
+    if ($forcar) {
+        session_start();
+        return;
+    }
+
+    $idCookie = (string)($_COOKIE[session_name()] ?? '');
+    if ($idCookie === '' || !preg_match('/^[a-zA-Z0-9,\-]{22,250}$/', $idCookie)) return;
+    if (!is_file(SESSIONS_DIR . '/sess_' . $idCookie)) return;
+
+    session_start();
+}
+
+/**
+ * "Assinatura" da senha de uma conta: um hash do senha_hash gravado em
+ * usuarios.csv. Guardada na sessão ao entrar (auth.php) e comparada a cada
+ * requisição autenticada (sessao_confere_com_a_conta): quando a senha muda
+ * — troca em api/conta.php ou redefinição pelo código de recuperação — a
+ * assinatura da conta muda e TODAS as sessões abertas com a senha antiga
+ * deixam de valer na próxima requisição, em qualquer aparelho. Não precisa
+ * de coluna nova no CSV, e nunca guarda o senha_hash em si na sessão.
+ */
+function assinatura_senha(string $senhaHash): string {
+    return hash('sha256', $senhaHash);
+}
+
+/**
+ * A sessão atual ainda corresponde à senha atual da conta? false só quando
+ * a conta EXISTE e a assinatura guardada na sessão é de uma senha antiga.
+ * Nos casos em que não dá para afirmar, a sessão é mantida (melhor não
+ * derrubar todo mundo por um CSV que não abriu naquele instante):
+ *   - lista de usuários vazia (falha de leitura) ou conta não encontrada;
+ *   - sessão criada antes deste recurso (sem assinatura): adota a
+ *     assinatura de agora — ninguém é deslogado à toa na atualização.
+ */
+function sessao_confere_com_a_conta(): bool {
+    $matricula = (string)($_SESSION['matricula'] ?? '');
+    $usuarios = csv_assoc(USERS_CSV);
+    if ($matricula === '' || !$usuarios) return true;
+
+    foreach ($usuarios as $u) {
+        if (trim((string)($u['matricula'] ?? '')) !== $matricula) continue;
+        $atual = assinatura_senha((string)($u['senha_hash'] ?? ''));
+        if (!isset($_SESSION['assinatura_senha'])) {
+            $_SESSION['assinatura_senha'] = $atual;
+            return true;
+        }
+        return hash_equals((string)$_SESSION['assinatura_senha'], $atual);
+    }
+    return true;
+}
+
+/**
+ * Se LOGIN_DURACAO_ATIVADA estiver ligado, confere se já passou tempo
+ * demais desde a última requisição autenticada; se sim, encerra a sessão
+ * (equivalente a um logout automático). Enquanto a sessão continuar válida,
+ * renova o carimbo de "última atividade" — ou seja, é uma janela deslizante:
+ * qualquer uso autenticado adia a expiração, não é um prazo fixo contado só
+ * a partir do login.
+ */
+function aplicar_expiracao_login(): void {
+    if (empty($_SESSION['authenticated'])) return;
+
+    if (LOGIN_DURACAO_ATIVADA) {
+        $ultimaAtividade = (int)($_SESSION['ultima_atividade'] ?? 0);
+        if ($ultimaAtividade > 0 && (time() - $ultimaAtividade) > LOGIN_DURACAO_SEGUNDOS) {
+            $_SESSION = [];
+            session_destroy();
+            return;
+        }
+    }
+
+    // Senha trocada em outro lugar desde que esta sessão começou: encerra.
+    if (!sessao_confere_com_a_conta()) {
+        $_SESSION = [];
+        session_destroy();
+        return;
+    }
+
+    $_SESSION['ultima_atividade'] = time();
+}
+
+function json_response(mixed $data, int $status = 200): never {
+    http_response_code($status);
+    header('Content-Type: application/json; charset=utf-8');
+    // "private" é sinal pra qualquer cache compartilhado no meio do
+    // caminho (ex.: Cloudflare) nunca guardar isto, mesmo que alguma regra
+    // de cache tente forçar; "no-store" é o mesmo pedido pro navegador.
+    header('Cache-Control: private, no-store');
+    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+/**
+ * Serve uma resposta JSON pública e cacheável — pensada pra funcionar bem
+ * tanto com o cache do navegador quanto com um CDN/proxy no meio do
+ * caminho (ex.: Cloudflare). Usa dois validadores condicionais em
+ * sequência, do mais barato pro mais preciso:
+ *
+ *   1) Last-Modified / If-Modified-Since: comparamos a data de modificação
+ *      mais recente entre os arquivos de dados informados E os arquivos de
+ *      código envolvidos (config.php, _bootstrap.php, o endpoint chamador)
+ *      contra o que o navegador diz já ter. Se nada mudou desde então,
+ *      devolvemos 304 SEM sequer chamar $gerarResposta — nem gastamos
+ *      tempo montando uma resposta que sabemos que vai ser descartada.
+ *   2) Se algum arquivo mudou (ou é a primeira visita), aí sim montamos a
+ *      resposta — mas ela pode ainda ser idêntica à que o navegador já tem
+ *      (ex.: um arquivo mudou por causa de outro aluno que nem aparece
+ *      nesta resposta específica). Por isso calculamos um ETag a partir do
+ *      CONTEÚDO já gerado (não mais da data dos arquivos) e comparamos com
+ *      o que o navegador mandou — se bater, devolvemos 304 mesmo já tendo
+ *      gerado o corpo, pelo menos economizando a banda de mandar de novo.
+ *
+ * Cache-Control é "public" (pode ser guardada por caches compartilhados,
+ * não só pelo navegador de quem pediu) + "no-cache" (que apesar do nome
+ * permite guardar, mas exige sempre revalidar com o servidor antes de
+ * reusar — nunca serve uma cópia "às cegas" sem checar primeiro) +
+ * "max-age=0" (deixa explícito que a resposta já nasce "velha" — alguns
+ * navegadores só guardam uma resposta pra revalidação condicional futura
+ * se algum indicador explícito de "tempo de vida" estiver presente, mesmo
+ * que seja zero).
+ *
+ * Só use isto para dados verdadeiramente públicos (sem sessão/dado
+ * pessoal): a resposta pode ficar guardada em caches compartilhados, então
+ * nunca deve variar por usuário.
+ */
+function responder_com_cache(array $arquivosDeDados, string $arquivoChamador, callable $gerarResposta): never {
+    header('Cache-Control: public, no-cache, max-age=0');
+
+    $arquivos = array_merge($arquivosDeDados, [$arquivoChamador, __FILE__, __DIR__ . '/config.php', __DIR__ . '/config_compartilhada.php']);
+    $mtimeMaisRecente = 0;
+    foreach ($arquivos as $arquivo) {
+        if (is_file($arquivo)) $mtimeMaisRecente = max($mtimeMaisRecente, filemtime($arquivo));
+    }
+    $lastModified = gmdate('D, d M Y H:i:s', $mtimeMaisRecente) . ' GMT';
+    header('Last-Modified: ' . $lastModified);
+
+    $seModificadoDesde = (string)($_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? '');
+    if ($seModificadoDesde !== '') {
+        $timestampCliente = strtotime($seModificadoDesde);
+        if ($timestampCliente !== false && $timestampCliente >= $mtimeMaisRecente) {
+            http_response_code(304);
+            exit;
+        }
+    }
+
+    $corpo = json_encode($gerarResposta(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $etag = substr(hash('sha256', (string)$corpo), 0, 32);
+    header('ETag: "' . $etag . '"');
+
+    $etagCliente = (string)($_SERVER['HTTP_IF_NONE_MATCH'] ?? '');
+    if ($etagCliente !== '' && str_contains($etagCliente, $etag)) {
+        http_response_code(304);
+        exit;
+    }
+
+    http_response_code(200);
+    header('Content-Type: application/json; charset=utf-8');
+    echo $corpo;
+    exit;
+}
+
+function require_login(): array {
+    sessao_iniciar_se_necessario();
+    aplicar_expiracao_login();
+    if (empty($_SESSION['authenticated']) || empty($_SESSION['matricula'])) {
+        json_response(['sucesso' => false, 'mensagem' => 'Não autenticado.'], 401);
+    }
+    return [
+        'matricula' => (string)$_SESSION['matricula'],
+        'nome' => (string)($_SESSION['nome'] ?? ''),
+    ];
+}
+
+/**
+ * Caminho => cabeçalho padrão, um por CSV do site público. headers_para_arquivo()
+ * (usada pelas escritas) e o registro em registrar_csv_padrao() logo abaixo
+ * (que faz csv_assoc()/csv_rows() criarem sozinhos o arquivo, já com o
+ * cabeçalho certo, na primeira leitura, se ele ainda não existir) dependem
+ * dos dois do mesmo mapa. Ou seja: adicionar um CSV novo continua sendo só
+ * 3 coisas, sempre aqui em _bootstrap.php — a constante do caminho (lá em
+ * cima), a entrada em CSV_HEADERS, e uma linha neste mapa — nenhum endpoint
+ * que só lê ou escreve o CSV precisa saber o cabeçalho dele.
+ */
+function caminhos_para_headers(): array {
+    static $mapa = null;
+    if ($mapa === null) {
+        $mapa = [
+            USERS_CSV => CSV_HEADERS['usuarios'],
+            ACTIVITIES_CSV => CSV_HEADERS['atividades'],
+            ORDERS_CSV => CSV_HEADERS['pedidos'],
+            ITEMS_CSV => CSV_HEADERS['itens'],
+            CARROSSEL_CSV => CSV_HEADERS['carrossel'],
+            EVENTOS_CSV => CSV_HEADERS['eventos'],
+            PROJETOS_CSV => CSV_HEADERS['projetos'],
+            TURMAS_HISTORICO_CSV => CSV_HEADERS['turmas_historico'],
+            USER_LOG_CSV => CSV_HEADERS['log_usuarios'],
+        ];
+    }
+    return $mapa;
+}
+
+function headers_para_arquivo(string $file): array {
+    return caminhos_para_headers()[$file] ?? [];
+}
+
+foreach (caminhos_para_headers() as $arquivo => $header) {
+    registrar_csv_padrao($arquivo, $header);
+}
+
+function conta_esta_ativa(array $usuario): bool {
+    if (!EXIGIR_APROVACAO_CONTA) return true;
+    return trim((string)($usuario['ativo'] ?? '')) === '1';
+}
+
+/**
+ * Deixa um texto seguro pra virar célula do log de usuários: tira
+ * caracteres de controle (quebra de linha falsificaria uma linha de log),
+ * limita o tamanho e neutraliza o gatilho de fórmula do Excel/Sheets (=, +,
+ * -, @ no começo) com um apóstrofo — parte do que vai pro log (ex.: o
+ * e-mail novo) veio do próprio aluno.
+ */
+function log_texto_seguro(string $valor, int $maximo): string {
+    $valor = trim(preg_replace('/[\x00-\x1F\x7F]+/u', ' ', $valor) ?? '');
+    if (mb_strlen($valor) > $maximo) $valor = mb_substr($valor, 0, $maximo - 1) . '…';
+    if (preg_match('/^[=+\-@\t]/', $valor)) $valor = "'" . $valor;
+    return $valor;
+}
+
+/**
+ * Registra uma ação de aluno em log_usuarios.csv (só admins conseguem ver,
+ * em /admin/log.html). Nunca derruba a ação que está sendo registrada: se
+ * não conseguir gravar, só deixa uma linha no log de erros do PHP.
+ *
+ * NUNCA passe senha (nem hash) nem o código de recuperação em $detalhes.
+ * CPF e celular podem ir por extenso: só admins leem o log, e os mesmos
+ * valores já estão em usuarios.csv e na tela do aluno no painel.
+ */
+function registrar_log_usuario(string $matricula, string $nome, string $acao, string $detalhes = ''): void {
+    try {
+        append_csv(USER_LOG_CSV, [
+            date('c'),
+            log_texto_seguro($matricula, 40),
+            log_texto_seguro($nome, 80),
+            $acao,
+            log_texto_seguro($detalhes, 500),
+            client_ip(),
+        ], CSV_HEADERS['log_usuarios']);
+    } catch (Throwable $e) {
+        error_log('registrar_log_usuario: ' . $e->getMessage());
+    }
+}
+
+/** Lê turmas_historico.csv inteiro, já agrupado por matrícula (veja api/turma_utils.php). */
+function carregar_historico_turmas_agrupado(): array {
+    return agrupar_historico_turmas(csv_assoc(TURMAS_HISTORICO_CSV));
+}
+
+// ano_da_data() e aplicar_expiracao_anual() (puras, sem depender de nenhum
+// arquivo específico do site público) agora vivem em financeiro_utils.php,
+// compartilhadas com o painel admin. As quatro funções abaixo continuam
+// com os mesmos nomes/assinaturas de sempre — só delegam pras versões
+// parametrizadas (sufixo "_de") daquele arquivo, passando ACTIVITIES_CSV/
+// ORDERS_CSV — pra todo o código existente do site público (api/loja.php,
+// api/profile.php, api/ranking.php, auth.php) continuar funcionando sem
+// nenhuma mudança. Veja o comentário no topo de financeiro_utils.php para
+// o motivo de existirem duas versões.
+
+/** Ganho/gasto/saldo de TODOS os alunos — veja calcular_resumo_financeiro_de(). */
+function calcular_resumo_financeiro(): array {
+    return calcular_resumo_financeiro_de(ACTIVITIES_CSV, ORDERS_CSV);
+}
+
+/** Ganho/gasto/saldo de todos os alunos só no ano informado — veja calcular_resumo_financeiro_do_ano_de(). */
+function calcular_resumo_financeiro_do_ano(int $ano): array {
+    return calcular_resumo_financeiro_do_ano_de(ACTIVITIES_CSV, ORDERS_CSV, $ano);
+}
+
+/** Ganho/gasto de UM aluno, agrupado por ano — veja agrupar_financeiro_por_ano_de(). */
+function agrupar_financeiro_por_ano(string $matricula): array {
+    return agrupar_financeiro_por_ano_de(ACTIVITIES_CSV, ORDERS_CSV, $matricula);
+}
+
+/** Ganho/gasto/saldo (com expiração anual e 'expiracoes') de UM aluno — veja calcular_saldo_aluno_de(). */
+function calcular_saldo_aluno(string $matricula): array {
+    return calcular_saldo_aluno_de(ACTIVITIES_CSV, ORDERS_CSV, $matricula);
+}
+
+/**
+ * Limitador de tentativas simples baseado em arquivo, para reduzir força
+ * bruta. Por padrão ($porIp = true) a chave inclui o IP do cliente — bom
+ * para login/redefinição de senha, onde "muitas tentativas vindas do mesmo
+ * lugar" é um sinal real de ataque. Passe $porIp = false para um limite
+ * compartilhado por TODOS os clientes (útil para cadastro numa escola, onde
+ * várias contas legítimas costumam vir do mesmo IP de saída — nesse caso
+ * limitar por IP puniria a escola inteira por causa de uma turma cadastrando
+ * ao mesmo tempo). Falha "aberta" (não bloqueia) se o arquivo de controle
+ * não puder ser usado, para nunca derrubar o site por isso.
+ */
+function enforce_rate_limit(string $action, string $target, int $maxAttempts, int $windowSeconds, bool $porIp = true): void {
+    $fh = @fopen(RATE_LIMIT_FILE, 'c+');
+    if (!$fh) return;
+    if (!acquire_lock($fh, LOCK_EX)) { fclose($fh); return; }
+
+    $raw = stream_get_contents($fh);
+    $data = $raw ? json_decode($raw, true) : [];
+    if (!is_array($data)) $data = [];
+
+    $now = time();
+    $key = $action . '|' . $target . ($porIp ? '|' . client_ip() : '');
+    $recent = array_values(array_filter($data[$key] ?? [], fn($t) => is_int($t) && $t > $now - $windowSeconds));
+
+    $blocked = count($recent) >= $maxAttempts;
+    if (!$blocked) {
+        $recent[] = $now;
+        $data[$key] = $recent;
+        // Mantém o arquivo pequeno: descarta chaves sem atividade na última hora.
+        foreach ($data as $k => $v) {
+            $v = array_values(array_filter((array)$v, fn($t) => is_int($t) && $t > $now - 3600));
+            if ($v) { $data[$k] = $v; } else { unset($data[$k]); }
+        }
+        rewind($fh);
+        ftruncate($fh, 0);
+        fwrite($fh, json_encode($data));
+        fflush($fh);
+    }
+
+    flock($fh, LOCK_UN);
+    fclose($fh);
+
+    if ($blocked) {
+        json_response(['sucesso' => false, 'mensagem' => 'Muitas tentativas. Aguarde alguns minutos e tente novamente.'], 429);
+    }
+}

@@ -5,24 +5,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Perfil - EcoCoin</title>
     <link rel="stylesheet" href="style.css">
-    <script src="script_login_perfil.js"></script>
+    <script src="script.js" defer></script>
+    <script src="script_login_perfil.js" defer></script>
 </head>
 <body id="pagina_perfil">
-    <header></header>
+    <noscript>
+        <div class="aviso-noscript">
+            ⚠️ Este site precisa de JavaScript habilitado para funcionar completamente. Habilite o JavaScript no seu navegador.
+        </div>
+    </noscript>
+    <header>
+        <div class="nav-container">
+            <a href="/" class="logo-text">386 <span>EcoCoin</span></a>
+            <button type="button" class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">☰</button>
+            <nav><ul>
+                <li><a href="/">INÍCIO</a></li>
+                <li><a href="loja.html">LOJA</a></li>
+                <li><a href="ranking.html">RANKING</a></li>
+                <li><a href="perfil.html" class="link-ativo">PERFIL</a></li>
+            </ul></nav>
+        </div>
+    </header>
 
     <main class="main-content-single">      
         <div class="card perfil-header">
             <div class="perfil-avatar">
-                <img src="Imagens/usuario1.png" alt="Foto do Aluno">
+                <img src="Imagens/usuario1.svg" alt="Foto do Aluno">
             </div>
             <div class="perfil-info">
                 <h1 id="nomeAluno">Carregando...</h1>
-                <p>
-                    <strong>Matrícula:</strong> <span id="matriculaAluno"></span> | 
-                    <strong>Turma:</strong> <span id="turmaAluno"></span>
+                <p class="perfil-dados">
+                    <span class="perfil-dado"><strong>Matrícula:</strong> <span id="matriculaAluno"></span></span>
+                    <span class="perfil-dado"><strong>Turma:</strong> <span id="turmaAluno"></span></span>
+                    <button type="button" id="btnTrocarTurma" class="link-acao">Atualizar minha turma</button>
                 </p>
-                <div id="saldoAluno" style="font-weight: bold; margin-top: 10px; font-size: 1.2rem;"></div>
+                <p id="avisoSemTurmaEsteAno" class="aviso-pendente oculto">
+                    📋 Você ainda não informou em qual turma está matriculado(a) este ano. Por favor, atualize abaixo.
+                </p>
+                <p id="avisoTrocaTurmaPendente" class="aviso-pendente oculto">
+                    ⏳ Sua solicitação para a turma <strong id="turmaSolicitadaPendente"></strong> está aguardando aprovação.
+                    <button type="button" id="btnCancelarSolicitacaoPendente" class="link-acao">Cancelar solicitação</button>
+                </p>
+                <div id="formTrocarTurma" class="form-troca-turma oculto">
+                    <input type="text" id="novaTurma" placeholder="Turma atual" inputmode="numeric">
+                    <button type="button" id="btnConfirmarTrocaTurma" class="btn-entrar">Confirmar</button>
+                    <button type="button" id="btnCancelarTrocaTurma" class="link-acao">Cancelar</button>
+                    <p class="texto-ajuda-turma">Informe a turma em que você está matriculado(a) na escola <strong>agora</strong> — isto não é uma escolha de preferência, é uma correção de cadastro.</p>
+                </div>
+                <div id="saldoAluno" class="saldo-aluno"></div>
             </div>
+        </div>
+
+        <div class="card" id="cardDadosConta">
+            <div class="card-cabecalho-dados">
+                <span class="card-title">Meus Dados</span>
+                <!-- Recolhido por padrão: o formulário só aparece depois deste clique. -->
+                <button type="button" id="btnAlternarDadosConta" class="link-acao" aria-expanded="false" aria-controls="formDadosConta">Alterar meus dados</button>
+            </div>
+            <form id="formDadosConta" class="form-dados-conta oculto" novalidate>
+                <label for="contaEmail">E-mail</label>
+                <input type="email" id="contaEmail" autocomplete="email">
+
+                <!-- CPF e celular: começam ocultos; script_login_perfil.js mostra ou remove cada um
+                     conforme CPF_MODO/TELEFONE_MODO (api/config.php) — o mesmo do cadastro. -->
+                <div id="campoContaCpf" class="oculto">
+                    <label for="contaCpf">CPF</label>
+                    <input type="text" id="contaCpf" inputmode="numeric" autocomplete="off" maxlength="14">
+                </div>
+                <div id="campoContaTelefone" class="oculto">
+                    <label for="contaTelefone">Celular com DDD</label>
+                    <input type="tel" id="contaTelefone" inputmode="tel" autocomplete="tel-national" maxlength="15">
+                </div>
+
+                <!-- Trocar a senha é opcional e fica recolhido: só aparece depois do clique. -->
+                <div class="form-dados-conta__senha">
+                    <button type="button" id="btnAlternarNovaSenha" class="link-acao" aria-expanded="false" aria-controls="secaoNovaSenha">Alterar minha senha</button>
+                    <div id="secaoNovaSenha" class="oculto">
+                        <label for="contaNovaSenha">Nova senha</label>
+                        <input type="password" id="contaNovaSenha" autocomplete="new-password">
+                        <label for="contaConfNovaSenha">Repita a nova senha</label>
+                        <input type="password" id="contaConfNovaSenha" autocomplete="new-password">
+                    </div>
+                </div>
+
+                <!-- Vale para QUALQUER alteração acima (e-mail, CPF, celular ou senha). -->
+                <div class="form-dados-conta__confirmacao">
+                    <label for="contaSenhaAtual">Para salvar, digite sua senha atual</label>
+                    <p class="form-dados-conta__ajuda">É a senha que você usa hoje para entrar no site. Pedimos isso sempre que algo é alterado, para proteger a sua conta.</p>
+                    <input type="password" id="contaSenhaAtual" autocomplete="current-password">
+                </div>
+
+                <button type="submit" id="btnSalvarDadosConta" class="btn-entrar">Salvar alterações</button>
+            </form>
         </div>
 
         <!-- <div class="card">
@@ -55,7 +129,7 @@
                 </thead>
                 <tbody id="atividadesAluno">
                     <tr>
-                        <td colspan="3" style="text-align: center; color: var(--text-gray); padding: 20px;">
+                        <td colspan="3" class="texto-estado texto-estado--tabela">
                             Carregando suas atividades...
                         </td>
                     </tr>
@@ -63,12 +137,11 @@
             </table>
         </div>
 
-        <button class="btn-sair" onclick="sessionStorage.clear(); window.location.href='login.html';">
+        <button class="btn-sair" id="btnSair">
             ❌ Sair da Conta
         </button>
     </main>
 
     <footer></footer>
-    <script src="script.js"></script>
 </body>
 </html>

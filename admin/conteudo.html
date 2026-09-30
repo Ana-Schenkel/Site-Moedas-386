@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conteúdo da Home — Admin 386 EcoCoin</title>
+<link rel="stylesheet" href="estilo_admin.css">
+<!-- Só as regras de ../style.css marcadas com @preview (o slide do carrossel), pra prévia
+     "como vai aparecer" ter o visual real do site sem vazar o CSS global dele pro painel -->
+<link rel="stylesheet" href="css_preview.php">
+<script src="script_admin.js" defer></script>
+<script src="script_admin_conteudo.js" defer></script>
+</head>
+<body>
+
+<noscript>
+    <div class="aviso-noscript">
+        ⚠️ Este painel precisa de JavaScript habilitado para funcionar. Habilite o JavaScript no seu navegador.
+    </div>
+</noscript>
+
+<header class="admin-header">
+    <a href="painel.html" class="logo-admin">386 <span>Admin</span></a>
+    <button type="button" class="menu-toggle-admin" aria-label="Abrir menu" aria-expanded="false">☰</button>
+    <nav><ul>
+            <li><a href="painel.html">Painel</a></li>
+            <li><a href="aluno.html">Alunos</a></li>
+            <li><a href="atividades.html">Atividades</a></li>
+            <li><a href="loja.html">Loja</a></li>
+            <li><a href="pedidos.html">Pedidos</a></li>
+            <li><a href="conteudo.html" class="ativo">Conteúdo</a></li>
+            <li><a href="log.html">Log</a></li>
+    </ul></nav>
+    <button class="sair-btn" onclick="window.location.href='logout.php'">Sair</button>
+</header>
+
+<main class="admin-main">
+    <h1 class="admin-titulo">Conteúdo da página inicial</h1>
+    <p class="admin-subtitulo">Carrossel de fotos, eventos em destaque e projetos da escola — tudo que aparece na home.</p>
+
+    <section class="admin-secao-conteudo cor-carrossel">
+        <div class="admin-secao-cabecalho">
+            <h2>🖼️ Carrossel</h2>
+            <button type="button" class="admin-btn pequeno btn-novo" data-tipo="carrossel">+ Adicionar novo</button>
+        </div>
+
+        <form class="admin-form admin-form-conteudo oculto" data-tipo="carrossel" data-campos="imagem,legenda">
+            <input type="hidden" class="campo-id" value="">
+            <div class="admin-form-linha">
+                <div><label>Legenda</label><input type="text" data-campo="legenda" required></div>
+                <div><label>Ordem</label><input type="number" class="campo-ordem" value="1" required></div>
+            </div>
+
+            <label>Imagem</label>
+            <div class="admin-campo-imagem">
+                <div class="admin-campo-imagem__upload">
+                    <input type="file" class="campo-imagem-arquivo" accept="image/jpeg,image/png,image/gif,image/webp">
+                    <div class="admin-campo-imagem__url-linha">
+                        <input type="text" class="campo-imagem-url" placeholder="ou cole uma URL pra baixar">
+                        <button type="button" class="admin-btn secundario btn-baixar-imagem admin-nowrap">Baixar</button>
+                    </div>
+                    <input type="hidden" data-campo="imagem" value="">
+                </div>
+                <div class="admin-campo-imagem__preview-coluna">
+                    <div class="preview-imagem-conteudo admin-preview-caixa"></div>
+                    <button type="button" class="admin-btn perigo pequeno btn-remover-imagem admin-nowrap oculto">Remover imagem</button>
+                </div>
+            </div>
+
+            <div class="admin-form-conteudo-acoes">
+                <button type="submit" class="admin-btn">Salvar</button>
+                <button type="button" class="admin-btn secundario btn-visualizar-slide">👁️ Visualizar slide</button>
+                <button type="button" class="admin-btn secundario btn-fechar-form">Cancelar</button>
+            </div>
+            <div class="preview-slide-carrossel admin-preview-slide oculto">
+                <p class="admin-subtitulo">Como vai aparecer no carrossel:</p>
+                <div class="preview-slide-conteudo"></div>
+            </div>
+        </form>
+
+        <div class="rolagem-horizontal">
+            <table class="admin-tabela"><thead><tr><th>Ordem</th><th>Legenda</th><th>Imagem</th><th>Status</th><th></th></tr></thead>
+                <tbody class="corpo-lista" data-tipo="carrossel"><tr><td colspan="5" class="admin-vazio">Carregando...</td></tr></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="admin-secao-conteudo cor-eventos">
+        <div class="admin-secao-cabecalho">
+            <h2>📅 Eventos</h2>
+            <button type="button" class="admin-btn pequeno btn-novo" data-tipo="eventos">+ Adicionar novo</button>
+        </div>
+
+        <form class="admin-form admin-form-conteudo oculto" data-tipo="eventos" data-campos="tag,titulo,descricao,rodape,link">
+            <input type="hidden" class="campo-id" value="">
+            <div class="admin-form-linha">
+                <div><label>Tag (ex: OFICINA)</label><input type="text" data-campo="tag" required></div>
+                <div><label>Título</label><input type="text" data-campo="titulo" required></div>
+                <div><label>Ordem</label><input type="number" class="campo-ordem" value="1" required></div>
+            </div>
+            <label>Descrição</label><textarea data-campo="descricao" required></textarea>
+            <div class="admin-form-linha">
+                <div><label>Rodapé (data/local/recompensa)</label><input type="text" data-campo="rodape" required></div>
+                <div><label>Link de inscrição (opcional)</label><input type="text" data-campo="link"></div>
+            </div>
+            <div class="admin-form-conteudo-acoes">
+                <button type="submit" class="admin-btn">Salvar</button>
+                <button type="button" class="admin-btn secundario btn-fechar-form">Cancelar</button>
+            </div>
+        </form>
+
+        <div class="rolagem-horizontal">
+            <table class="admin-tabela"><thead><tr><th>Ordem</th><th>Tag</th><th>Título</th><th>Status</th><th></th></tr></thead>
+                <tbody class="corpo-lista" data-tipo="eventos"><tr><td colspan="5" class="admin-vazio">Carregando...</td></tr></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="admin-secao-conteudo cor-projetos">
+        <div class="admin-secao-cabecalho">
+            <h2>🎓 Projetos</h2>
+            <button type="button" class="admin-btn pequeno btn-novo" data-tipo="projetos">+ Adicionar novo</button>
+        </div>
+
+        <form class="admin-form admin-form-conteudo oculto" data-tipo="projetos" data-campos="titulo,parceria,descricao">
+            <input type="hidden" class="campo-id" value="">
+            <div class="admin-form-linha">
+                <div><label>Título</label><input type="text" data-campo="titulo" required></div>
+                <div><label>Parceria (opcional)</label><input type="text" data-campo="parceria"></div>
+                <div><label>Ordem</label><input type="number" class="campo-ordem" value="1" required></div>
+            </div>
+            <label>Descrição</label><textarea data-campo="descricao" required></textarea>
+            <div class="admin-form-conteudo-acoes">
+                <button type="submit" class="admin-btn">Salvar</button>
+                <button type="button" class="admin-btn secundario btn-fechar-form">Cancelar</button>
+            </div>
+        </form>
+
+        <div class="rolagem-horizontal">
+            <table class="admin-tabela"><thead><tr><th>Ordem</th><th>Título</th><th>Status</th><th></th></tr></thead>
+                <tbody class="corpo-lista" data-tipo="projetos"><tr><td colspan="4" class="admin-vazio">Carregando...</td></tr></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+</body>
+</html>

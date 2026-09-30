@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log de Ações — Admin 386 EcoCoin</title>
+<link rel="stylesheet" href="estilo_admin.css">
+<script src="script_admin.js" defer></script>
+<script src="script_admin_log.js" defer></script>
+</head>
+<body>
+
+<noscript>
+    <div class="aviso-noscript">
+        ⚠️ Este painel precisa de JavaScript habilitado para funcionar. Habilite o JavaScript no seu navegador.
+    </div>
+</noscript>
+
+<header class="admin-header">
+    <a href="painel.html" class="logo-admin">386 <span>Admin</span></a>
+    <button type="button" class="menu-toggle-admin" aria-label="Abrir menu" aria-expanded="false">☰</button>
+    <nav><ul>
+            <li><a href="painel.html">Painel</a></li>
+            <li><a href="aluno.html">Alunos</a></li>
+            <li><a href="atividades.html">Atividades</a></li>
+            <li><a href="loja.html">Loja</a></li>
+            <li><a href="pedidos.html">Pedidos</a></li>
+            <li><a href="conteudo.html">Conteúdo</a></li>
+            <li><a href="log.html" class="ativo">Log</a></li>
+    </ul></nav>
+    <button class="sair-btn" onclick="window.location.href='logout.php'">Sair</button>
+</header>
+
+<main class="admin-main">
+    <h1 class="admin-titulo">Log de ações</h1>
+    <p class="admin-subtitulo" id="subtitulo-log"></p>
+
+    <div class="admin-abas" role="tablist">
+        <button type="button" class="admin-aba ativa" role="tab" data-aba="admins" aria-selected="true">Administradores</button>
+        <button type="button" class="admin-aba" role="tab" data-aba="alunos" aria-selected="false">Alunos</button>
+    </div>
+
+    <div class="admin-barra-busca oculto" id="barra-busca-log">
+        <input type="search" id="busca-log" placeholder="Buscar por matrícula, nome, ação ou detalhe" autocomplete="off" aria-label="Buscar no log de alunos">
+    </div>
+
+    <div class="admin-cartao">
+        <div class="rolagem-horizontal">
+            <table class="admin-tabela">
+                <thead id="cabecalho-log"></thead>
+                <tbody id="corpo-log">
+                    <tr><td colspan="4" class="admin-vazio">Carregando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

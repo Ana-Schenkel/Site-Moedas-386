@@ -1,47 +1,146 @@
 // ==========================================
-// 1. CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
+// AUTENTICAÇÃO E PERFIL
+// A identidade do aluno é mantida exclusivamente pela sessão PHP.
+// O servidor mantém a sessão PHP em cookie HttpOnly.
 // ==========================================
-// MANTÉM A MATRÍCULA COMO TEXTO (PRESERVA ZEROS À ESQUERDA)
-const alunoLogado = sessionStorage.getItem("alunoLogado") ? String(sessionStorage.getItem("alunoLogado")).trim() : "";
 
-const API_URL_perfil = "https://script.google.com/macros/s/AKfycby2Rb7zzG23sCtFLuUIkbXFn_q2gE4LvITZiTqKQ910p6mqTKRogZhd8gWVF4wx5Ns/exec"; 
-const API_URL_login = "https://script.google.com/macros/s/AKfycbzi47ifZHK2bsMJzkFxz-0JNft0c0fhGU3osG2fRPdDA77PWjHVsfKXXVCcAeCM6urP/exec";
-
-// ==========================================
-// 2. INICIALIZAÇÃO DO SITE
-// ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
-    await inicializarPerfil();
-});
-
-async function inicializarPerfil() {
     const pagina = document.body.id;
 
-    if (!alunoLogado) {
-        if (pagina === "pagina_perfil") {
-            alert("Por favor, faça login primeiro!");
+    if (pagina === "pagina_login") {
+        await inicializarLogin();
+        return;
+    }
+
+    if (pagina === "pagina_perfil") {
+        await inicializarPerfil();
+        return;
+    }
+
+    if (pagina === "pagina_recuperar") {
+        await inicializarRecuperar();
+    }
+});
+
+async function inicializarRecuperar() {
+    const config = await window.configPromise;
+
+    const campoMatricula = document.getElementById("rec_matricula");
+    if (campoMatricula) {
+        campoMatricula.maxLength = config.matriculaTamanho;
+        restringirSomenteNumeros(campoMatricula, "Matrícula");
+    }
+
+    const linkWhatsapp = document.getElementById("link-whatsapp-recuperar");
+    if (linkWhatsapp && config.whatsappLink) linkWhatsapp.href = config.whatsappLink;
+
+    const novaSenha = document.getElementById("nova_senha");
+    if (novaSenha) melhorarCampoSenha(novaSenha, { checklist: true, regras: config });
+
+    const formRecuperar = document.getElementById("form-recuperar");
+    if (formRecuperar) formRecuperar.addEventListener("submit", (evento) => { evento.preventDefault(); verificarERedefinir(); });
+}
+
+async function inicializarPerfil() {
+    configurarTrocaTurma();
+    await configurarDadosConta();
+    document.getElementById("btnSair")?.addEventListener("click", sair);
+    await carregarPerfil();
+}
+
+async function carregarPerfil() {
+    try {
+        const resposta = await fetch('api/profile.php', {
+            credentials: 'same-origin',
+            cache: 'no-store'
+        });
+
+        if (resposta.status === 401) {
             window.location.href = 'login.html';
-        } else if (pagina === "pagina_login") { 
-            await inicializarLogin();
+            return;
         }
-    } else {
-        if (pagina === "pagina_perfil") {
-            await carregarPerfilAluno(alunoLogado);
-        }
+
+        if (!resposta.ok) throw new Error("Não foi possível carregar o perfil.");
+        const dadosAluno = await resposta.json();
+        renderizarPerfil(dadosAluno);
+    } catch (erro) {
+        console.error("Erro ao carregar perfil:", erro);
+        document.getElementById("nomeAluno").innerText = "Erro de conexão";
+        document.getElementById("saldoAluno").innerText = "Não foi possível carregar seu perfil.";
     }
 }
 
-// ==========================================
-// 3. CONFIGURAÇÕES DE LOGIN E CADASTRO
-// ==========================================
+/**
+ * Se já existe uma sessão válida, não faz sentido mostrar a tela de login
+ * de novo: vai direto para o perfil. Usa replace() para que o botão
+ * "voltar" não traga o aluno de volta para o login. Se a checagem falhar
+ * (rede, servidor), segue para o login normalmente.
+ */
+async function redirecionarSeJaLogado() {
+    try {
+        const resposta = await fetch('api/sessao.php', { credentials: 'same-origin', cache: 'no-store' });
+        if (!resposta.ok) return false;
+        const status = await resposta.json();
+        if (status.autenticado) {
+            window.location.replace('perfil.html');
+            return true;
+        }
+    } catch {
+        // Sem resposta: só mostra o login.
+    }
+    return false;
+}
+
 async function inicializarLogin() {
+    if (await redirecionarSeJaLogado()) return;
+
+    // Voltando para esta página pelo cache do navegador (botão "voltar"),
+    // o código acima não roda de novo — confere a sessão outra vez.
+    window.addEventListener('pageshow', (evento) => {
+        if (evento.persisted) redirecionarSeJaLogado();
+    });
+
+    const config = await window.configPromise;
+
     const botao_conta = document.getElementById("btn_conta");
-    const botao_entrar = document.getElementById("btn_entrar");
-    const botao_cadastrar = document.getElementById("btn_cadastrar");
+    const formLogin = document.getElementById("login");
+    const formCadastro = document.getElementById("nova_conta");
 
     if (botao_conta) botao_conta.addEventListener("click", trocaPaginaCadastro);
-    if (botao_entrar) botao_entrar.addEventListener("click", fazerLogin);
-    if (botao_cadastrar) botao_cadastrar.addEventListener("click", fazerCadastro);
+
+    // Usar o evento "submit" (em vez de "click" no botão) permite enviar o
+    // formulário apertando Enter em qualquer campo, como o usuário espera.
+    if (formLogin) formLogin.addEventListener("submit", (evento) => { evento.preventDefault(); fazerLogin(); });
+    if (formCadastro) formCadastro.addEventListener("submit", (evento) => { evento.preventDefault(); fazerCadastro(config); });
+
+    // Impede digitar o que não é permitido em cada campo, em vez de só
+    // reclamar depois de enviar o formulário.
+    const campoMatricula = document.getElementById("matricula_cadastro");
+    const campoTurma = document.getElementById("turma_cadastro");
+    const campoNome = document.getElementById("nome_cadastro");
+    if (campoMatricula) {
+        campoMatricula.maxLength = config.matriculaTamanho;
+        restringirSomenteNumeros(campoMatricula, "Matrícula");
+    }
+    if (campoTurma) {
+        campoTurma.maxLength = config.turmaTamanho;
+        restringirSomenteNumeros(campoTurma, "Turma");
+    }
+    if (campoNome) restringirSomenteLetras(campoNome, "Nome completo");
+    configurarCamposContato(config);
+
+    // Mostrar/ocultar em todo campo de senha; a listinha de regras que
+    // acende verde/vermelho só faz sentido onde a senha está sendo
+    // definida de novo (cadastro), não no login.
+    const senhaLogin = document.getElementById("senha_login");
+    if (senhaLogin) melhorarCampoSenha(senhaLogin);
+    const senhaCadastro = document.getElementById("senha_cadastro");
+    if (senhaCadastro) melhorarCampoSenha(senhaCadastro, { checklist: true, regras: config });
+    const confSenha = document.getElementById("confsenha");
+    if (confSenha) melhorarCampoSenha(confSenha);
+
+    const linkWhatsapp = document.getElementById("link-whatsapp-login");
+    if (linkWhatsapp && config.whatsappLink) linkWhatsapp.href = config.whatsappLink;
 }
 
 function trocaPaginaCadastro() {
@@ -49,124 +148,259 @@ function trocaPaginaCadastro() {
     const botao_conta = document.getElementById("btn_conta");
     const login = document.getElementById("login");
     const novaConta = document.getElementById("nova_conta");
-    
-    if (login.style.display !== "none") {
-        login.style.display = "none";
-        novaConta.style.display = "block";
-        if (botao_conta) botao_conta.textContent = "Já tenho conta";
-        if (titulo) titulo.textContent = "Nova conta";
-    } else {
-        login.style.display = "block";
-        novaConta.style.display = "none";
-        if (botao_conta) botao_conta.textContent = "Não tenho conta";
-        if (titulo) titulo.textContent = "Acesse sua conta";
-    }
+
+    // Se o login está visível agora, este clique vai TROCAR para o
+    // cadastro (e vice-versa) — o texto do título/botão segue o destino.
+    const indoParaCadastro = !login.classList.contains('oculto');
+    login.classList.toggle('oculto', indoParaCadastro);
+    novaConta.classList.toggle('oculto', !indoParaCadastro);
+    if (botao_conta) botao_conta.textContent = indoParaCadastro ? "Já tenho conta" : "Não tenho conta";
+    if (titulo) titulo.textContent = indoParaCadastro ? "Nova conta" : "Acesse sua conta";
 }
 
-// ============================================================
-// 4. FUNÇÃO DE LOGIN (VALIDADA NO SERVIDOR)
-// ============================================================
 async function fazerLogin() {
     const email = document.getElementById("email_login").value.trim().toLowerCase();
-    const senha = document.getElementById("senha_login").value.trim();
+    const senha = document.getElementById("senha_login").value;
 
     if (!email || !senha) {
-        alert("Por favor, informe seu e-mail e sua senha.");
+        mostrarAviso("Por favor, informe seu e-mail e sua senha.", 'erro');
         return;
     }
 
     try {
-        const resposta = await fetch(API_URL_login, {
+        const resposta = await fetch('auth.php', {
             method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({ acao: "login", email, senha })
+        });
+
+        const resultado = await resposta.json();
+
+        if (resultado.sucesso) {
+            window.location.href = 'perfil.html';
+        } else {
+            mostrarAviso(resultado.mensagem || "E-mail ou senha incorretos.", 'erro');
+        }
+    } catch (erro) {
+        console.error("Erro ao realizar login:", erro);
+        mostrarAviso("Erro ao conectar com o servidor. Tente novamente.", 'erro');
+    }
+}
+
+/**
+ * CPF e celular do cadastro: 'oculto' remove o campo do formulário,
+ * 'opcional' mostra (pode ficar em branco) e 'obrigatorio' mostra e exige
+ * — o mesmo CPF_MODO/TELEFONE_MODO que o servidor aplica (api/config.php).
+ */
+function configurarCamposContato(config) {
+    const campos = [
+        { modo: config.cpfModo, idLi: "li_cpf_cadastro", idInput: "cpf_cadastro", rotulo: "CPF", mascara: mascararCpf },
+        { modo: config.telefoneModo, idLi: "li_telefone_cadastro", idInput: "telefone_cadastro", rotulo: "Celular com DDD", mascara: mascararTelefone },
+    ];
+    for (const { modo, idLi, idInput, rotulo, mascara } of campos) {
+        const li = document.getElementById(idLi);
+        const input = document.getElementById(idInput);
+        if (!li || !input) continue;
+        if (modo !== "opcional" && modo !== "obrigatorio") {
+            li.remove(); // oculto: some do formulário (e do preenchimento automático)
+            continue;
+        }
+        input.required = modo === "obrigatorio";
+        input.placeholder = modo === "opcional" ? `${rotulo} (opcional)` : rotulo;
+        input.addEventListener("input", () => { input.value = mascara(input.value); });
+        li.classList.remove("oculto");
+    }
+}
+
+/** 000.000.000-00 enquanto digita. */
+function mascararCpf(valor) {
+    const d = valor.replace(/\D/g, "").slice(0, 11);
+    let s = d.slice(0, 3);
+    if (d.length > 3) s += "." + d.slice(3, 6);
+    if (d.length > 6) s += "." + d.slice(6, 9);
+    if (d.length > 9) s += "-" + d.slice(9, 11);
+    return s;
+}
+
+/** (00) 90000-0000 enquanto digita; um +55 colado na frente é descartado. */
+function mascararTelefone(valor) {
+    let d = valor.replace(/\D/g, "");
+    if (d.length > 11 && d.startsWith("55")) d = d.slice(2);
+    d = d.slice(0, 11);
+    if (!d) return "";
+    let s = "(" + d.slice(0, 2);
+    if (d.length > 2) s += ") " + d.slice(2, 7);
+    if (d.length > 7) s += "-" + d.slice(7);
+    return s;
+}
+
+/** CPF válido? Formato (11 dígitos ou 000.000.000-00) + dígitos verificadores (módulo 11). Espelha validar_cpf() de config.php. */
+function cpfValido(cpf) {
+    if (!/^(\d{11}|\d{3}\.\d{3}\.\d{3}-\d{2})$/.test(cpf)) return false;
+    const d = cpf.replace(/\D/g, "");
+    if (/^(\d)\1{10}$/.test(d) || d === "01234567890") return false; // repetidos e o CPF de teste
+    for (const n of [9, 10]) {
+        let soma = 0;
+        for (let i = 0; i < n; i++) soma += Number(d[i]) * (n + 1 - i);
+        if (Number(d[n]) !== ((soma * 10) % 11) % 10) return false;
+    }
+    return true;
+}
+
+/** Espelha validar_telefone() de config.php. Devolve a mensagem de erro, ou null se estiver ok. */
+function erroTelefone(telefone, config) {
+    if (!/^\+?[\d\s().\-]+$/.test(telefone)) return "Celular inválido. Digite o DDD e o número, ex.: (21) 91234-5678.";
+    let d = telefone.replace(/\D/g, "");
+    if (d.length === 13 && d.startsWith("55")) d = d.slice(2);
+    if (d.length !== 11) return "Celular inválido. Digite o DDD e o número, ex.: (21) 91234-5678.";
+    if (!(config.dddsValidos || []).includes(Number(d.slice(0, 2)))) return "Celular inválido: DDD inexistente.";
+    if (d[2] !== "9") return "Celular inválido: o número deve começar com 9 depois do DDD.";
+    return null;
+}
+
+/** Validação no navegador, espelhando as mesmas regras que o servidor aplica (config.php). */
+function validarCadastro(campos, config) {
+    const palavrasNome = campos.nome.split(/\s+/).filter(Boolean);
+    if (palavrasNome.length < 2) return "Digite o nome completo (nome e sobrenome).";
+
+    if (!new RegExp(`^\\d{${config.turmaTamanho}}$`).test(campos.turma)) {
+        return `A turma deve ter exatamente ${config.turmaTamanho} números.`;
+    }
+
+    if (!new RegExp(`^\\d{${config.matriculaTamanho}}$`).test(campos.matricula)) {
+        return "Matrícula inválida.";
+    }
+    const ano = Number(campos.matricula.slice(0, 4));
+    if (ano < config.matriculaAnoMin || ano > config.matriculaAnoMax) {
+        return "Matrícula inválida.";
+    }
+
+    if (!campos.email.includes('@')) return "E-mail inválido.";
+
+    // Campo de contato só entra aqui se o modo dele não for 'oculto' (nesse
+    // caso o valor já vem "" e o servidor ignora de qualquer forma).
+    if (config.cpfModo === "obrigatorio" && !campos.cpf) return "Informe o CPF.";
+    if (campos.cpf && !cpfValido(campos.cpf)) return "CPF inválido.";
+    if (config.telefoneModo === "obrigatorio" && !campos.telefone) return "Informe o celular.";
+    if (campos.telefone) {
+        const erroTel = erroTelefone(campos.telefone, config);
+        if (erroTel) return erroTel;
+    }
+
+    return validarSenha(campos.senha, config);
+}
+
+function validarSenha(senha, config) {
+    if (senha.length < config.senhaMinTamanho) return `A senha deve ter pelo menos ${config.senhaMinTamanho} caracteres.`;
+    if (config.senhaMinLetras > 0 && (senha.match(/\p{L}/gu) || []).length < config.senhaMinLetras) {
+        return `A senha deve ter pelo menos ${config.senhaMinLetras} letra(s).`;
+    }
+    if (config.senhaMinNumeros > 0 && (senha.match(/[0-9]/g) || []).length < config.senhaMinNumeros) {
+        return `A senha deve ter pelo menos ${config.senhaMinNumeros} número(s).`;
+    }
+    if (config.senhaMinEspeciais > 0 && (senha.match(/[^\p{L}0-9]/gu) || []).length < config.senhaMinEspeciais) {
+        return `A senha deve ter pelo menos ${config.senhaMinEspeciais} caractere(s) especial(is).`;
+    }
+    return null;
+}
+
+async function fazerCadastro(config) {
+    const nome = document.getElementById("nome_cadastro").value.trim();
+    const matricula = document.getElementById("matricula_cadastro").value.trim();
+    const turma = document.getElementById("turma_cadastro").value.trim();
+    const email = document.getElementById("email_cadastro").value.trim().toLowerCase();
+    // Ausentes do formulário (modo 'oculto') viram "".
+    const cpf = document.getElementById("cpf_cadastro")?.value.trim() ?? "";
+    const telefone = document.getElementById("telefone_cadastro")?.value.trim() ?? "";
+    const senha = document.getElementById("senha_cadastro").value;
+    const confSenha = document.getElementById("confsenha").value;
+
+    if (!nome || !matricula || !turma || !email || !senha) {
+        mostrarAviso("Por favor, preencha todos os campos do cadastro.", 'erro');
+        return;
+    }
+
+    if (senha !== confSenha) {
+        mostrarAviso("As senhas não coincidem!", 'erro');
+        return;
+    }
+
+    const erroValidacao = validarCadastro({ nome, matricula, turma, email, cpf, telefone, senha }, config);
+    if (erroValidacao) {
+        mostrarAviso(erroValidacao, 'erro');
+        return;
+    }
+
+    try {
+        const resposta = await fetch('auth.php', {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
             body: JSON.stringify({
-                acao: "login",
-                email: email,
-                senha: senha
+                acao: "cadastro", nome, matricula, turma, email, cpf, telefone, senha
             })
         });
 
         const resultado = await resposta.json();
 
         if (resultado.sucesso) {
-            // Salva a matrícula como Texto no sessionStorage
-            sessionStorage.setItem("alunoLogado", String(resultado.matricula).trim()); 
-            alert(`Login bem-sucedido! Bem-vindo(a), ${resultado.nome || ''}.`);
-            window.location.href = 'perfil.html'; 
+            mostrarModalToken(resultado.tokenRecuperacao, resultado.contaAtiva !== false);
         } else {
-            alert(resultado.mensagem || "E-mail ou senha incorretos.");
-        }
-    } catch (erro) {
-        console.error("Erro ao realizar login:", erro);
-        alert("Erro ao conectar com o servidor. Tente novamente.");
-    }
-}
-
-// ============================================================
-// 5. FUNÇÃO DE CADASTRO
-// ============================================================
-async function fazerCadastro() {
-    const nome = document.getElementById("nome_cadastro").value.trim();
-    const matricula = document.getElementById("matricula_cadastro").value.trim();
-    const turma = document.getElementById("turma_cadastro").value.trim();
-    const email = document.getElementById("email_cadastro").value.trim().toLowerCase();
-    const senha = document.getElementById("senha_cadastro").value.trim();
-    const confSenha = document.getElementById("confsenha").value.trim();
-
-    if (!nome || !matricula || !turma || !email || !senha) {
-        alert("Por favor, preencha todos os campos do cadastro.");
-        return;
-    }
-
-    if (senha !== confSenha) {
-        alert("As senhas não coincidem!");
-        return;
-    }
-
-    try {
-        // 1. Cadastra na aba Dados Gerais (Login)
-        const resposta = await fetch(API_URL_login, {
-            method: "POST",
-            body: JSON.stringify({
-                acao: "cadastro",
-                nome: nome,
-                matricula: matricula,
-                turma: turma,
-                email: email,
-                senha: senha
-            })
-        });
-
-        const resultadoTexto = await resposta.text();
-
-        if (resultadoTexto.includes("OK")) {
-            // 2. Cria/Inicializa a aba de Perfil do aluno
-            try {
-                await fetch(API_URL_perfil, {
-                    method: "POST",
-                    body: JSON.stringify({
-                        nome: nome,
-                        matricula: matricula,
-                        turma: turma
-                    })
-                });
-            } catch (ePerfil) {
-                console.warn("Aviso na criação da aba perfil:", ePerfil);
-            }
-
-            alert("Cadastro realizado com sucesso! Faça login para continuar.");
-            trocaPaginaCadastro();
-        } else {
-            alert(resultadoTexto);
+            mostrarAviso(resultado.mensagem || "Não foi possível realizar o cadastro.", 'erro');
         }
     } catch (erro) {
         console.error("Erro no cadastro:", erro);
-        alert("Erro de conexão ao realizar o cadastro.");
+        mostrarAviso("Erro de conexão ao realizar o cadastro.", 'erro');
     }
 }
 
-// ===============================================
-// 6. CARREGAMENTO DO PERFIL DO ALUNO (CORRIGIDO)
-// ===============================================
+/**
+ * Mostra o código de recuperação de senha uma única vez, logo após o
+ * cadastro. Diferente de mostrarAviso(), fica na tela até o aluno confirmar
+ * que anotou — este código nunca mais será exibido depois disso.
+ */
+function mostrarModalToken(token, contaAtiva) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+
+    const avisoConta = contaAtiva
+        ? ''
+        : `<p class="modal-cadastro__aviso">
+             Sua conta foi criada, mas ainda precisa ser aprovada antes de aparecer no ranking ou fazer resgates.
+           </p>`;
+
+    overlay.innerHTML = `
+        <div class="modal-cadastro">
+            <h2>Cadastro realizado! 🎉</h2>
+            <p class="modal-cadastro__intro">
+                Guarde este código. Ele será pedido se você esquecer sua senha, e <strong>não será mostrado de novo</strong>.
+            </p>
+            <div class="modal-cadastro__token">
+                ${escapeHtml(token || '------')}
+            </div>
+            <div class="modal-cadastro__acoes">
+                <button id="btn-copiar-token" class="btn-entrar btn-entrar--flex">Copiar código</button>
+                <button id="btn-fechar-token" class="btn-entrar btn-entrar--flex btn-entrar--cinza">Entendi</button>
+            </div>
+            ${avisoConta}
+        </div>`;
+
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('#btn-copiar-token').addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(token || '');
+            mostrarAviso('Código copiado!', 'sucesso', 2000);
+        } catch {
+            mostrarAviso('Não foi possível copiar automaticamente — anote o código manualmente.', 'erro');
+        }
+    });
+
+    const fechar = () => { overlay.remove(); trocaPaginaCadastro(); };
+    overlay.querySelector('#btn-fechar-token').addEventListener('click', fechar);
+}
+
 function formatarData(dataJSON) {
     if (!dataJSON) return "";
     const data = new Date(dataJSON);
@@ -180,86 +414,449 @@ function formatarData(dataJSON) {
     return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
-async function carregarPerfilAluno(nomeAba_matricula) {
-    try {
-        const resposta = await fetch(`${API_URL_perfil}?aba=${nomeAba_matricula}`);
-        if (!resposta.ok) throw new Error("Erro de resposta na consulta do Perfil");
+let trocaTurmaPendenteAtual = null;
 
-        const dadosAluno = await resposta.json();
+function renderizarPerfil(aluno) {
+    if (!aluno || typeof aluno !== "object" || !aluno.nome) {
+        document.getElementById("nomeAluno").innerText = "Perfil não encontrado";
+        document.getElementById("saldoAluno").innerText = "Perfil do aluno não encontrado.";
+        return;
+    }
 
-        if (dadosAluno && Array.isArray(dadosAluno) && dadosAluno.length > 5) {
-            document.getElementById("nomeAluno").innerText = dadosAluno[1][0] || "Aluno"; 
-            document.getElementById("turmaAluno").innerText = dadosAluno[1][1] || ""; 
-            document.getElementById("matriculaAluno").innerText = dadosAluno[1][2] || nomeAba_matricula; 
-            
-            // CONVERSÃO SEGURA DO SALDO (evita quebrar se vier como texto)
-            const saldoTexto = String(dadosAluno[5][1] || "0").replace(',', '.');
-            const saldoNum = parseFloat(saldoTexto) || 0;
-            document.getElementById("saldoAluno").innerText = `🪙 ${saldoNum.toFixed(2)} EcoCoins`; 
-            
-            const tbody = document.getElementById("atividadesAluno"); 
-            tbody.innerHTML = ""; 
+    document.getElementById("nomeAluno").innerText = aluno.nome || "Aluno";
+    document.getElementById("turmaAluno").innerText = aluno.turma || "não definida";
+    document.getElementById("matriculaAluno").innerText = aluno.matricula || "";
+    document.getElementById("saldoAluno").innerText = `🪙 ${formatarMoeda(aluno.saldo)} EcoCoins`;
 
-            for (let i = 7; i < dadosAluno.length; i++) {
-                if (!dadosAluno[i] || !dadosAluno[i][0]) continue;
-                const data = formatarData(dadosAluno[i][0]); 
-                const atividade = dadosAluno[i][1] || ""; 
-                const valor = dadosAluno[i][3] || 0;     
+    // Três estados possíveis, nesta ordem de prioridade: (1) já existe uma
+    // troca aguardando decisão — mostra o aviso com a turma pedida e
+    // esconde o botão de solicitar outra (o servidor rejeitaria mesmo
+    // assim, mas evita preencher o formulário só pra receber um erro);
+    // (2) sem troca pendente, mas o aluno não tem turma válida pra ESTE
+    // ano (aluno.turma vem "" nesse caso — veja api/profile.php) — pede
+    // pra ele atualizar, com o formulário já aberto; (3) tudo normal.
+    trocaTurmaPendenteAtual = aluno.trocaTurmaPendente || null;
+    const botaoTrocar = document.getElementById("btnTrocarTurma");
+    const avisoPendente = document.getElementById("avisoTrocaTurmaPendente");
+    const avisoSemTurma = document.getElementById("avisoSemTurmaEsteAno");
+    const form = document.getElementById("formTrocarTurma");
 
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${atividade}</td>
-                    <td>${data}</td>
-                    <td>${valor > 0 ? "+" : ""}${valor}</td>
-                `;
-                tbody.appendChild(tr);
-            }
-        } else {
-            document.getElementById("nomeAluno").innerText = "Perfil não encontrado";
-            document.getElementById("saldoAluno").innerText = "Aba do aluno não encontrada na planilha.";
+    if (trocaTurmaPendenteAtual) {
+        if (botaoTrocar) botaoTrocar.classList.add('oculto');
+        if (avisoPendente) {
+            avisoPendente.classList.remove('oculto');
+            const alvo = document.getElementById("turmaSolicitadaPendente");
+            if (alvo) alvo.innerText = `${trocaTurmaPendenteAtual.turma} (${trocaTurmaPendenteAtual.ano})`;
         }
-    } catch (erro) {
-        console.error("Erro ao carregar perfil do aluno:", erro);
-        document.getElementById("nomeAluno").innerText = "Erro de Sincronização";
-        document.getElementById("saldoAluno").innerText = "Verifique a conexão com a planilha.";
+        if (avisoSemTurma) avisoSemTurma.classList.add('oculto');
+        if (form) form.classList.add('oculto');
+    } else {
+        if (avisoPendente) avisoPendente.classList.add('oculto');
+        if (!aluno.turma) {
+            // Sem turma válida pra este ano — chama atenção e já abre o
+            // formulário, em vez de exigir mais um clique.
+            if (avisoSemTurma) avisoSemTurma.classList.remove('oculto');
+            if (botaoTrocar) botaoTrocar.classList.add('oculto');
+            if (form) form.classList.remove('oculto');
+        } else {
+            if (avisoSemTurma) avisoSemTurma.classList.add('oculto');
+            if (botaoTrocar) botaoTrocar.classList.remove('oculto');
+        }
+    }
+
+    if (aluno.contaAtiva === false) {
+        mostrarAviso('Sua conta está pendente de aprovação. Você ainda não aparece no ranking nem pode fazer resgates.', 'info', 8000);
+    }
+
+    const tbody = document.getElementById("atividadesAluno");
+    if (!tbody) return;
+
+    const atividades = Array.isArray(aluno.atividades) ? aluno.atividades : [];
+    if (atividades.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="texto-estado texto-estado--tabela">
+            Nenhuma atividade registrada ainda.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = atividades.map(a => {
+        const valor = Number(a.valor) || 0;
+        return `
+            <tr>
+                <td>${escapeHtml(a.atividade)}</td>
+                <td>${escapeHtml(formatarData(a.data))}</td>
+                <td>${valor > 0 ? "+" : ""}${formatarMoeda(valor)}</td>
+            </tr>`;
+    }).join('');
+}
+
+// ==========================================
+// MEUS DADOS (e-mail, CPF, celular, senha) — api/conta.php
+// ==========================================
+// Os valores gravados só chegam ao navegador quando o aluno abre o cartão
+// (carregarDadosConta) — api/profile.php não os manda.
+let dadosContaAtuais = { email: "", cpf: "", telefone: "" };
+
+/**
+ * Liga o cartão "Meus Dados" em perfil.html. CPF e celular seguem o mesmo
+ * CPF_MODO/TELEFONE_MODO do cadastro (api/config.php): 'oculto' remove o
+ * campo, 'opcional' e 'obrigatorio' mostram. Aqui os dois nunca levam o
+ * atributo "required": em 'obrigatorio', uma conta antiga ainda sem CPF não
+ * é obrigada a preenchê-lo só para trocar o e-mail — é o servidor quem
+ * decide (resolver_edicao_campo(), api/config.php).
+ */
+async function configurarDadosConta() {
+    const form = document.getElementById("formDadosConta");
+    if (!form) return;
+    const config = await window.configPromise;
+
+    const campos = [
+        { modo: config.cpfModo, idBloco: "campoContaCpf", idInput: "contaCpf", rotulo: "CPF", mascara: mascararCpf },
+        { modo: config.telefoneModo, idBloco: "campoContaTelefone", idInput: "contaTelefone", rotulo: "Celular com DDD", mascara: mascararTelefone },
+    ];
+    for (const { modo, idBloco, idInput, rotulo, mascara } of campos) {
+        const bloco = document.getElementById(idBloco);
+        const input = document.getElementById(idInput);
+        if (!bloco || !input) continue;
+        if (modo !== "opcional" && modo !== "obrigatorio") {
+            bloco.remove(); // oculto: some do formulário
+            continue;
+        }
+        input.placeholder = modo === "opcional" ? `${rotulo} (opcional)` : rotulo;
+        input.addEventListener("input", () => { input.value = mascara(input.value); });
+        bloco.classList.remove("oculto");
+    }
+
+    // A listinha de regras só aparece quando o aluno começa a digitar uma
+    // senha nova (senão ficaria toda vermelha num campo que é opcional).
+    const novaSenha = document.getElementById("contaNovaSenha");
+    melhorarCampoSenha(novaSenha, { checklist: true, regras: config });
+    const checklist = novaSenha.closest(".wrapper-senha")?.nextElementSibling;
+    const atualizarChecklist = () => checklist?.classList.toggle("oculto", novaSenha.value === "");
+    novaSenha.addEventListener("input", atualizarChecklist);
+    atualizarChecklist();
+    melhorarCampoSenha(document.getElementById("contaConfNovaSenha"));
+    melhorarCampoSenha(document.getElementById("contaSenhaAtual"));
+
+    form.addEventListener("submit", (evento) => { evento.preventDefault(); salvarDadosConta(config); });
+
+    // Trocar a senha também é opcional e começa recolhido: quem só quer mudar
+    // o celular nem vê os campos de senha nova.
+    document.getElementById("btnAlternarNovaSenha")?.addEventListener("click", () => {
+        const abrindo = document.getElementById("secaoNovaSenha").classList.contains("oculto");
+        definirSecaoNovaSenha(abrindo);
+        if (abrindo) document.getElementById("contaNovaSenha")?.focus();
+    });
+
+    // O formulário começa recolhido; este botão abre e fecha. Fechar descarta
+    // o que ficou digitado e sem salvar (inclusive qualquer senha), voltando
+    // aos valores gravados.
+    const botaoAlternar = document.getElementById("btnAlternarDadosConta");
+    botaoAlternar?.addEventListener("click", async () => {
+        const abrindo = form.classList.contains("oculto");
+
+        if (!abrindo) {
+            aplicarDadosContaNoFormulario();
+            form.classList.add("oculto");
+            botaoAlternar.textContent = "Alterar meus dados";
+            botaoAlternar.setAttribute("aria-expanded", "false");
+            return;
+        }
+
+        // Os dados só são pedidos ao servidor agora; o formulário só aparece
+        // quando já chegaram (nunca vazio, para não parecer que não há nada).
+        botaoAlternar.disabled = true;
+        botaoAlternar.textContent = "Carregando...";
+        let abriu = false;
+        try {
+            abriu = await carregarDadosConta();
+        } catch (erro) {
+            mostrarAviso(erro.message, 'erro');
+        }
+        botaoAlternar.disabled = false;
+        botaoAlternar.textContent = abriu ? "Fechar" : "Alterar meus dados";
+        if (!abriu) return;
+
+        form.classList.remove("oculto");
+        botaoAlternar.setAttribute("aria-expanded", "true");
+        document.getElementById("contaEmail")?.focus();
+    });
+}
+
+/**
+ * Abre ou fecha a parte "nova senha" do formulário. Ao fechar, apaga o que
+ * foi digitado nela — assim uma senha nova deixada pela metade nunca vai
+ * junto no envio sem o aluno perceber.
+ */
+function definirSecaoNovaSenha(aberta) {
+    const secao = document.getElementById("secaoNovaSenha");
+    const botao = document.getElementById("btnAlternarNovaSenha");
+    if (!secao || !botao) return;
+    secao.classList.toggle("oculto", !aberta);
+    botao.textContent = aberta ? "Manter minha senha atual" : "Alterar minha senha";
+    botao.setAttribute("aria-expanded", String(aberta));
+    if (!aberta) {
+        for (const id of ["contaNovaSenha", "contaConfNovaSenha"]) {
+            const campo = document.getElementById(id);
+            if (campo) campo.value = "";
+        }
+        document.getElementById("contaNovaSenha")?.dispatchEvent(new Event("input"));
     }
 }
 
-// ============================================================
-// 7. REDEFINIR SENHA
-// ============================================================
+/**
+ * Busca e-mail, CPF e celular gravados (api/conta.php, GET) e preenche o
+ * formulário. Chamada a cada vez que o cartão é aberto, então o que aparece
+ * é sempre o valor de agora. Devolve false se a sessão expirou (já redireciona
+ * para o login); lança um Error com a mensagem para qualquer outra falha.
+ */
+async function carregarDadosConta() {
+    const resposta = await fetch('api/conta.php', { credentials: 'same-origin', cache: 'no-store' });
+    if (resposta.status === 401) { window.location.href = 'login.html'; return false; }
+    const resultado = await resposta.json().catch(() => ({}));
+    if (!resposta.ok || !resultado.sucesso) throw new Error(resultado.mensagem || 'Não foi possível carregar seus dados. Tente novamente.');
+
+    dadosContaAtuais = { email: resultado.email || "", cpf: resultado.cpf || "", telefone: resultado.telefone || "" };
+    aplicarDadosContaNoFormulario();
+    return true;
+}
+
+function aplicarDadosContaNoFormulario() {
+    const definir = (id, valor) => { const el = document.getElementById(id); if (el) el.value = valor; };
+    definir("contaEmail", dadosContaAtuais.email);
+    definir("contaCpf", dadosContaAtuais.cpf);
+    definir("contaTelefone", dadosContaAtuais.telefone);
+    definir("contaNovaSenha", "");
+    definir("contaConfNovaSenha", "");
+    definir("contaSenhaAtual", "");
+    definirSecaoNovaSenha(false); // recolhe (e limpa) a parte da senha nova
+}
+
+async function salvarDadosConta(config) {
+    const valorDe = (id) => document.getElementById(id)?.value ?? null;
+    const email = (valorDe("contaEmail") || "").trim().toLowerCase();
+    // null = campo ausente do formulário (modo 'oculto'): nem é enviado.
+    const cpfCampo = valorDe("contaCpf");
+    const telefoneCampo = valorDe("contaTelefone");
+    const cpf = cpfCampo === null ? null : cpfCampo.trim();
+    const telefone = telefoneCampo === null ? null : telefoneCampo.trim();
+    const novaSenha = valorDe("contaNovaSenha") || "";
+    const confNovaSenha = valorDe("contaConfNovaSenha") || "";
+    const senhaAtual = valorDe("contaSenhaAtual") || "";
+
+    if (!email || !email.includes("@")) { mostrarAviso("E-mail inválido.", 'erro'); return; }
+
+    if (cpf !== null) {
+        if (cpf === "" && config.cpfModo === "obrigatorio" && dadosContaAtuais.cpf) { mostrarAviso("Informe o CPF.", 'erro'); return; }
+        if (cpf !== "" && !cpfValido(cpf)) { mostrarAviso("CPF inválido.", 'erro'); return; }
+    }
+    if (telefone !== null) {
+        if (telefone === "" && config.telefoneModo === "obrigatorio" && dadosContaAtuais.telefone) { mostrarAviso("Informe o celular.", 'erro'); return; }
+        if (telefone !== "") {
+            const erroTel = erroTelefone(telefone, config);
+            if (erroTel) { mostrarAviso(erroTel, 'erro'); return; }
+        }
+    }
+    const senhaNovaAberta = !document.getElementById("secaoNovaSenha")?.classList.contains("oculto");
+    if (senhaNovaAberta && novaSenha === "") {
+        mostrarAviso('Digite a nova senha, ou clique em "Manter minha senha atual" se não quiser trocá-la.', 'erro');
+        document.getElementById("contaNovaSenha")?.focus();
+        return;
+    }
+    if (novaSenha !== "" || confNovaSenha !== "") {
+        if (novaSenha !== confNovaSenha) { mostrarAviso("As novas senhas não coincidem!", 'erro'); return; }
+        const erroSenha = validarSenha(novaSenha, config);
+        if (erroSenha) { mostrarAviso(erroSenha, 'erro'); return; }
+    }
+
+    const mudou = email !== dadosContaAtuais.email.toLowerCase()
+        || (cpf !== null && cpf !== dadosContaAtuais.cpf)
+        || (telefone !== null && telefone !== dadosContaAtuais.telefone)
+        || novaSenha !== "";
+    if (!mudou) { mostrarAviso("Nenhuma alteração para salvar.", 'info'); return; }
+
+    if (!senhaAtual) {
+        mostrarAviso("Digite sua senha atual (no quadro cinza, abaixo) para salvar as alterações.", 'erro');
+        document.getElementById("contaSenhaAtual")?.focus();
+        return;
+    }
+
+    const corpo = { senhaAtual, email };
+    if (cpf !== null) corpo.cpf = cpf;
+    if (telefone !== null) corpo.telefone = telefone;
+    if (novaSenha !== "") corpo.novaSenha = novaSenha;
+
+    const botao = document.getElementById("btnSalvarDadosConta");
+    if (botao) botao.disabled = true;
+    try {
+        const resposta = await fetch('api/conta.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(corpo)
+        });
+        if (resposta.status === 401) { window.location.href = 'login.html'; return; }
+        const resultado = await resposta.json();
+        if (!resposta.ok || !resultado.sucesso) throw new Error(resultado.mensagem || 'Não foi possível salvar as alterações.');
+
+        dadosContaAtuais = { email: resultado.email || "", cpf: resultado.cpf || "", telefone: resultado.telefone || "" };
+        aplicarDadosContaNoFormulario(); // mostra o valor já formatado pelo servidor e limpa as senhas
+        mostrarAviso(resultado.senhaAlterada ? 'Dados e senha atualizados! Nos outros aparelhos onde você estava conectado(a), será preciso entrar de novo.' : resultado.mensagem, 'sucesso', 8000);
+    } catch (erro) {
+        mostrarAviso(erro.message, 'erro');
+        document.getElementById("contaSenhaAtual").value = ""; // pede a senha de novo em qualquer falha
+    } finally {
+        if (botao) botao.disabled = false;
+    }
+}
+
+/**
+ * Liga os botões de "Trocar de turma" em perfil.html. Chamada uma vez só,
+ * antes mesmo do perfil carregar (não depende dos dados do aluno) — quem
+ * decide se o botão aparece ou não é renderizarPerfil() (baseado em
+ * trocaTurmaPendente), não esta função.
+ */
+function configurarTrocaTurma() {
+    const botaoTrocar = document.getElementById("btnTrocarTurma");
+    const form = document.getElementById("formTrocarTurma");
+    const campoTurma = document.getElementById("novaTurma");
+    const botaoCancelar = document.getElementById("btnCancelarTrocaTurma");
+    const botaoConfirmar = document.getElementById("btnConfirmarTrocaTurma");
+    const botaoCancelarPendente = document.getElementById("btnCancelarSolicitacaoPendente");
+    if (!botaoTrocar || !form || !campoTurma) return;
+
+    window.configPromise.then(config => {
+        campoTurma.maxLength = config.turmaTamanho;
+    });
+    restringirSomenteNumeros(campoTurma, "Turma");
+
+    botaoTrocar.addEventListener("click", () => {
+        form.classList.remove('oculto');
+        botaoTrocar.classList.add('oculto');
+        campoTurma.value = "";
+        campoTurma.focus();
+    });
+
+    botaoCancelar.addEventListener("click", () => {
+        form.classList.add('oculto');
+        botaoTrocar.classList.remove('oculto');
+    });
+
+    botaoConfirmar.addEventListener("click", () => solicitarTrocaTurma());
+    botaoCancelarPendente?.addEventListener("click", () => cancelarSolicitacaoTurmaPendente());
+}
+
+async function solicitarTrocaTurma() {
+    const campoTurma = document.getElementById("novaTurma");
+    const turma = campoTurma.value.trim();
+    const config = await window.configPromise;
+
+    if (!new RegExp(`^\\d{${config.turmaTamanho}}$`).test(turma)) {
+        mostrarAviso(`A turma deve ter exatamente ${config.turmaTamanho} números.`, 'erro');
+        return;
+    }
+
+    if (!confirm(`Confirmar que você está matriculado(a) na turma "${turma}" atualmente?`)) return;
+
+    const botaoConfirmar = document.getElementById("btnConfirmarTrocaTurma");
+    botaoConfirmar.disabled = true;
+    try {
+        const resposta = await fetch('api/turma.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ turma })
+        });
+        const resultado = await resposta.json();
+        if (!resposta.ok || !resultado.sucesso) throw new Error(resultado.mensagem || 'Não foi possível enviar a solicitação.');
+
+        mostrarAviso(resultado.mensagem, 'sucesso', 6000);
+        document.getElementById("formTrocarTurma").classList.add('oculto');
+        await carregarPerfil(); // recarrega o perfil pra refletir a turma nova (ou o aviso de pendente)
+    } catch (erro) {
+        mostrarAviso(erro.message, 'erro');
+    } finally {
+        botaoConfirmar.disabled = false;
+    }
+}
+
+async function cancelarSolicitacaoTurmaPendente() {
+    if (!trocaTurmaPendenteAtual) return;
+    const { id, turma, ano } = trocaTurmaPendenteAtual;
+
+    if (!confirm(`Cancelar a solicitação de troca para a turma "${turma}" (${ano})?`)) return;
+
+    const botao = document.getElementById("btnCancelarSolicitacaoPendente");
+    if (botao) botao.disabled = true;
+    try {
+        const resposta = await fetch('api/turma.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ acao: 'cancelar', id })
+        });
+        const resultado = await resposta.json();
+        if (!resposta.ok || !resultado.sucesso) throw new Error(resultado.mensagem || 'Não foi possível cancelar a solicitação.');
+
+        mostrarAviso(resultado.mensagem, 'sucesso');
+        await carregarPerfil();
+    } catch (erro) {
+        mostrarAviso(erro.message, 'erro');
+    } finally {
+        if (botao) botao.disabled = false;
+    }
+}
+
 async function verificarERedefinir() {
+    const config = await window.configPromise;
+
     const matricula = document.getElementById("rec_matricula").value.trim();
     const email = document.getElementById("rec_email").value.trim().toLowerCase();
-    const novaSenha = document.getElementById("nova_senha").value.trim();
+    const token = document.getElementById("rec_token").value.trim().toUpperCase();
+    const novaSenha = document.getElementById("nova_senha").value;
 
-    if (!matricula || !email || !novaSenha) {
-        alert("Por favor, preencha todos os campos!");
+    if (!matricula || !email || !token || !novaSenha) {
+        mostrarAviso("Por favor, preencha todos os campos!", 'erro');
+        return;
+    }
+
+    const erroSenha = validarSenha(novaSenha, config);
+    if (erroSenha) {
+        mostrarAviso(erroSenha, 'erro');
         return;
     }
 
     try {
-        const resposta = await fetch(API_URL_login, {
+        const resposta = await fetch('auth.php', {
             method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
             body: JSON.stringify({
                 acao: "redefinirSenha",
-                matricula: matricula,
-                email: email,
-                novaSenha: novaSenha
+                matricula, email, token, novaSenha
             })
         });
 
-        const resultadoTexto = await resposta.text();
-        
-        if (resultadoTexto.includes("sucesso")) {
-            alert("Senha alterada com sucesso!");
-            window.location.href = 'login.html'; 
-        } else {
-            alert(resultadoTexto); 
-        }
+        const resultado = await resposta.json();
 
+        if (resultado.sucesso) {
+            mostrarAviso("Senha alterada com sucesso!", 'sucesso');
+            setTimeout(() => { window.location.href = 'login.html'; }, 1200);
+        } else {
+            mostrarAviso(resultado.mensagem || "Não foi possível alterar a senha.", 'erro');
+        }
     } catch (erro) {
         console.error("Erro ao redefinir senha:", erro);
-        alert("Ocorreu um erro ao tentar redefinir a senha.");
+        mostrarAviso("Ocorreu um erro ao tentar redefinir a senha.", 'erro');
+    }
+}
+
+async function sair() {
+    try {
+        await fetch('logout.php', {
+            method: 'POST',
+            credentials: 'same-origin'
+        });
+    } finally {
+        window.location.href = 'login.html';
     }
 }

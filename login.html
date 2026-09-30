@@ -5,61 +5,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Entrar - EcoCoins</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        body{
-            background-image: url('Imagens/fundo12.svg');;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            height: 100vh;
-        }
-    </style>
-    <script src="script_login_perfil.js"></script>
+    <script src="script.js" defer></script>
+    <script src="script_login_perfil.js" defer></script>
 </head>
 <body id="pagina_login">
 
-    <div class="logo-text" style="margin:12px 30px;">386 <span style="color: #0056b3;">EcoCoin</span></div>
+    <noscript>
+        <div class="aviso-noscript">
+            ⚠️ Este site precisa de JavaScript habilitado para funcionar. Habilite o JavaScript no seu navegador.
+        </div>
+    </noscript>
+
+    <a href="/" class="logo-text">386 <span>EcoCoin</span></a>
     
     <div class="acesso">
         <h1 id="titulo">Acesse sua conta</h1>
         
         <section class="area-cadastro">
             
-            <div id="login" class="cadastrar" style="margin-top: 20px; border-bottom: 1px solid rgb(255, 255, 255); padding-bottom: 20px;">
+            <form id="login" class="cadastrar">
                 <ul>
-                    <li><input type="email" id="email_login" placeholder="E-mail" required></li>
-                    <li><input type="password" id="senha_login" placeholder="Senha" required></li>
+                    <li><input type="email" id="email_login" placeholder="E-mail" autocomplete="email" required></li>
+                    <li><input type="password" id="senha_login" placeholder="Senha" autocomplete="current-password" required></li>
                     <li><input type="submit" id="btn_entrar" class="btn-entrar" value="Entrar"></li>
             
-                    <li style="margin-top: 10px; text-align: center;">
-                    <a href="recuperar.html" style="color: white; font-size: 0.9rem; text-decoration: underline;">
+                    <li class="texto-centro">
+                    <a href="recuperar.html" class="link-claro link-claro--grande">
                     Esqueci minha senha
                     </a></li>
                 </ul>
-            </div>
+            </form>
             
-            <div id="nova_conta" class="cadastrar" style="margin-top: 20px; border-bottom: 1px solid rgb(255, 255, 255); padding-bottom: 20px; ">
+            <form id="nova_conta" class="cadastrar oculto">
                 <ul>
-                    <li><input type="text" id="nome_cadastro" placeholder="Nome Completo" required></li>
+                    <li><input type="text" id="nome_cadastro" placeholder="Nome Completo" autocomplete="name" required></li>
                     <li><input type="text" id="turma_cadastro" placeholder="Turma" required></li>
-                    <li><input type="number" id="matricula_cadastro" placeholder="Matrícula" required></li>
-                    <li><input type="email" id="email_cadastro" placeholder="E-mail" required></li>
-                    <li><input type="password" id="senha_cadastro" placeholder="Senha" required></li>
-                    <li><input type="password" id="confsenha" placeholder="Confirmar Senha" required></li>
+                    <li><input type="text" id="matricula_cadastro" inputmode="numeric" autocomplete="off" placeholder="Matrícula" required></li>
+                    <li><input type="email" id="email_cadastro" placeholder="E-mail" autocomplete="email" required></li>
+                    <!-- CPF e celular: começam ocultos; script_login_perfil.js mostra, torna
+                         obrigatório ou remove cada um conforme CPF_MODO/TELEFONE_MODO (api/config.php). -->
+                    <li id="li_cpf_cadastro" class="oculto"><input type="text" id="cpf_cadastro" inputmode="numeric" autocomplete="off" placeholder="CPF" maxlength="14"></li>
+                    <li id="li_telefone_cadastro" class="oculto"><input type="tel" id="telefone_cadastro" inputmode="tel" autocomplete="tel-national" placeholder="Celular com DDD" maxlength="15"></li>
+                    <li><input type="password" id="senha_cadastro" placeholder="Senha" autocomplete="new-password" required></li>
+                    <li><input type="password" id="confsenha" placeholder="Confirmar Senha" autocomplete="new-password" required></li>
                     <li><input type="submit" id="btn_cadastrar" class="btn-entrar" value="Cadastrar"></li>
                 </ul>
-            </div>
-            <div class="redes" style="border-top: 1px solid rgb(255, 255, 255); padding-top: 20px; ">
+            </form>
+            <div class="redes">
                 <ul>
-                    <li><button id="btn_inicio" class="btn-entrar" style="background-color: white; margin-top: 10px;" onclick="window.location.href='index.html'">Voltar à página inicial</button></li>
-                    <li><button id="btn_conta" class="btn-entrar" style="background-color: var(--primary-dark); color: white;">Não tenho conta</button></li>
+                    <li><a id="btn_inicio" class="btn-entrar btn-entrar--bloco" href="/">Voltar à página inicial</a></li>
+                    <li><button id="btn_conta" class="btn-entrar btn-entrar--escuro">Não tenho conta</button></li>
                 </ul>
             </div>
 
-            <div style="text-align: center; margin-top: 15px;">
-                <a href="https://wa.me/SEUNUMERO?text=Olá,%20preciso%20de%20ajuda%20para%20recuperar%20minha%20senha%20do%20EcoCoin" 
-                    target="_blank" 
-                    style="color: white; font-size: 0.8rem; text-decoration: underline;">
+            <div class="bloco-ajuda-whatsapp">
+                <a href="https://wa.me/SEUNUMERO?text=Olá,%20preciso%20de%20ajuda%20para%20recuperar%20minha%20senha%20do%20EcoCoin"
+                    id="link-whatsapp-login"
+                    target="_blank"
+                    class="link-claro">
                     Problema no login? Fale com um monitor
                 </a>
             </div>
